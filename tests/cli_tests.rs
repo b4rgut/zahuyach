@@ -1,5 +1,5 @@
 use clap::Parser;
-use zahuyach::{Cli, Commands, commands};
+use zahuyach::{Cli, Commands};
 
 #[test]
 fn test_cli_init_command() {
@@ -75,34 +75,4 @@ fn test_cli_serve_short_command_custom_port() {
     let cli = Cli::try_parse_from(args).unwrap();
 
     assert_eq!(cli.command, Commands::Serve { port: 8080 });
-}
-
-#[test]
-fn test_handle_init_command_execution() {
-    let result = commands::init::run("my-blog".to_string()).unwrap();
-    assert_eq!(result, "Initializing new blog project: my-blog");
-}
-
-#[test]
-fn test_handle_build_command_execution_default() {
-    let result = commands::build::run("dist".to_string()).unwrap();
-    assert_eq!(result, "Building blog project: dist");
-}
-
-#[test]
-fn test_handle_build_command_execution_custom_output() {
-    let result = commands::build::run("public".to_string()).unwrap();
-    assert_eq!(result, "Building blog project: public");
-}
-
-#[test]
-fn test_handle_serve_command_execution_default_port() {
-    let result = commands::serve::run(3000).unwrap();
-    assert_eq!(result, "Serving blog project on port 3000");
-}
-
-#[test]
-fn test_handle_serve_command_execution_custom_port() {
-    let result = commands::serve::run(8080).unwrap();
-    assert_eq!(result, "Serving blog project on port 8080");
 }

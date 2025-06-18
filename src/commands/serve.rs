@@ -10,9 +10,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_run() {
-        let result = run(8080);
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "Serving blog project on port 8080");
+    fn test_serve_command_default_port() {
+        let result = run(3000).unwrap();
+        assert_eq!(result, "Serving blog project on port 3000");
+    }
+
+    #[test]
+    fn test_serve_command_custom_port() {
+        let result = run(8080).unwrap();
+        assert_eq!(result, "Serving blog project on port 8080");
     }
 }

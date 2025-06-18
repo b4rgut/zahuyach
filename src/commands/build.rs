@@ -14,4 +14,10 @@ mod tests {
         let result = run("dist".to_string()).unwrap();
         assert_eq!(result, "Building blog project: dist");
     }
+
+    #[test]
+    fn test_build_command_custom_output() {
+        let result = run("public".to_string()).unwrap();
+        assert_eq!(result, "Building blog project: public");
+    }
 }
