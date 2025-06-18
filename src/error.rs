@@ -10,7 +10,7 @@ impl fmt::Display for ZahuyachError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ZahuyachError::Io(err) => write!(f, "IO error: {}", err),
-            ZahuyachError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
+            ZahuyachError::InvalidInput(msg) => write!(f, "Error: Invalid input: {}", msg),
         }
     }
 }
