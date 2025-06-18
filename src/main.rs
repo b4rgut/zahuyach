@@ -14,14 +14,13 @@ pub enum Commands {
     /// Initialize a new blog project
     Init {
         /// Project name
-        #[arg(short, long)]
         name: String,
     },
     /// Build a blog project
     Build {
         /// Output directory
         #[arg(short, long, default_value = "dist")]
-        output: String,
+        dir: String,
     },
     /// Serve a blog project
     Serve {
@@ -36,8 +35,8 @@ pub fn handle_command(command: Commands) -> String {
         Commands::Init { name } => {
             format!("Initializing new blog project: {}", name)
         }
-        Commands::Build { output } => {
-            format!("Building blog project: {}", output)
+        Commands::Build { dir } => {
+            format!("Building blog project: {}", dir)
         }
         Commands::Serve { port } => {
             format!("Serving blog project on port {}", port)
@@ -57,7 +56,7 @@ mod tests {
 
     #[test]
     fn test_cli_init_command() {
-        let args = vec!["zahuyach", "init", "--name", "my-blog"];
+        let args = vec!["zahuyach", "init", "my-blog"];
         let cli = Cli::try_parse_from(args).unwrap();
 
         assert_eq!(
@@ -76,30 +75,35 @@ mod tests {
         assert_eq!(
             cli.command,
             Commands::Build {
-                output: "dist".to_string()
+                dir: "dist".to_string()
             }
         );
     }
 
     #[test]
-    fn test_cli_build_command_custom_output() {
-        let args = vec!["zahuyach", "build", "--output", "public"];
+    fn test_cli_build_long_command_custom_output() {
+        let args = vec!["zahuyach", "build", "--dir", "public"];
         let cli = Cli::try_parse_from(args).unwrap();
 
         assert_eq!(
             cli.command,
             Commands::Build {
-                output: "public".to_string()
+                dir: "public".to_string()
             }
         );
     }
 
     #[test]
-    fn test_cli_serve_command_custom_port() {
-        let args = vec!["zahuyach", "serve", "--port", "8080"];
+    fn test_cli_build_short_command_custom_output() {
+        let args = vec!["zahuyach", "build", "-d", "public"];
         let cli = Cli::try_parse_from(args).unwrap();
 
-        assert_eq!(cli.command, Commands::Serve { port: 8080 });
+        assert_eq!(
+            cli.command,
+            Commands::Build {
+                dir: "public".to_string()
+            }
+        );
     }
 
     #[test]
@@ -108,6 +112,22 @@ mod tests {
         let cli = Cli::try_parse_from(args).unwrap();
 
         assert_eq!(cli.command, Commands::Serve { port: 3000 });
+    }
+
+    #[test]
+    fn test_cli_serve_long_command_custom_port() {
+        let args = vec!["zahuyach", "serve", "--port", "8080"];
+        let cli = Cli::try_parse_from(args).unwrap();
+
+        assert_eq!(cli.command, Commands::Serve { port: 8080 });
+    }
+
+    #[test]
+    fn test_cli_serve_short_command_custom_port() {
+        let args = vec!["zahuyach", "serve", "-p", "8080"];
+        let cli = Cli::try_parse_from(args).unwrap();
+
+        assert_eq!(cli.command, Commands::Serve { port: 8080 });
     }
 
     #[test]
@@ -124,7 +144,7 @@ mod tests {
     #[test]
     fn test_handle_build_command_default() {
         let command = Commands::Build {
-            output: "dist".to_string(),
+            dir: "dist".to_string(),
         };
 
         let result = handle_command(command);
@@ -135,7 +155,7 @@ mod tests {
     #[test]
     fn test_handle_build_command_custom_output() {
         let command = Commands::Build {
-            output: "public".to_string(),
+            dir: "public".to_string(),
         };
 
         let result = handle_command(command);
