@@ -68,6 +68,9 @@ zahuyach serve -p 8080
 └── config.toml      # Конфигурация сайта
 ```
 
+## Лицензия
+
+Лицензировано под MIT лицензией ([LICENSE](LICENSE) или http://opensource.org/licenses/MIT) на ваш выбор.
 
 ## Участие в разработке
 

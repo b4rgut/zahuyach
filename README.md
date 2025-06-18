@@ -40,6 +40,38 @@ zahuyach build
 zahuyach serve
 ```
 
+### Additional Options
+
+#### Build command
+```bash
+# Specify output directory
+zahuyach build --dir public
+zahuyach build -d public
+```
+
+#### Serve command
+```bash
+# Specify port
+zahuyach serve --port 8080
+zahuyach serve -p 8080
+```
+
+## Project Structure
+
+After running `zahuyach init` the following structure is created:
+
+```
+my-blog/
+├── content/          # Markdown files
+├── templates/        # HTML templates
+├── static/          # Static files (CSS, JS, images)
+└── config.toml      # Site configuration
+```
+
+## License
+
+Licensed under either of MIT license ([LICENSE](LICENSE) or http://opensource.org/licenses/MIT) at your option.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
