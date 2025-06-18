@@ -64,8 +64,8 @@ zahuyach serve -p 8080
 мой-блог/
 ├── content/          # Markdown файлы
 ├── templates/        # HTML шаблоны
-├── static/          # Статические файлы (CSS, JS, изображения)
-└── config.toml      # Конфигурация сайта
+├── static/           # Статические файлы (CSS, JS, изображения)
+└── config.toml       # Конфигурация сайта
 ```
 
 

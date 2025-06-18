@@ -64,8 +64,8 @@ After running `zahuyach init` the following structure is created:
 my-blog/
 ├── content/          # Markdown files
 ├── templates/        # HTML templates
-├── static/          # Static files (CSS, JS, images)
-└── config.toml      # Site configuration
+├── static/           # Static files (CSS, JS, images)
+└── config.toml       # Site configuration
 ```
 
 ## Contributing
