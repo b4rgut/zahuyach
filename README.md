@@ -1,5 +1,7 @@
 # Zahuyach
 
+**🇺🇸 English | [🇷🇺 Русский](README_RU.md)**
+
 A static site generator for blogs written in Rust.
 
 ## Description
@@ -37,13 +39,6 @@ zahuyach build
 ```bash
 zahuyach serve
 ```
-
-## License
-
-Licensed under either of
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
 
 ## Contributing
 
