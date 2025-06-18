@@ -68,10 +68,6 @@ my-blog/
 └── config.toml      # Site configuration
 ```
 
-## License
-
-Licensed under either of MIT license ([LICENSE](LICENSE) or http://opensource.org/licenses/MIT) at your option.
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
