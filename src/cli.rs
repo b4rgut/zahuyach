@@ -16,12 +16,13 @@ pub enum Commands {
     ///
     /// Creates a new blog project with the specified name, setting up
     /// the necessary directory structure and configuration files.
+    /// If no name is provided, uses the current directory name.
     Init {
-        /// Project name
+        /// Project name (optional)
         ///
-        /// The name of the blog project to create. This will be used
-        /// as the directory name and in configuration.
-        name: String,
+        /// The name of the blog project to create. If not provided,
+        /// uses the current directory name.
+        name: Option<String>,
     },
     /// Build a blog project
     ///
