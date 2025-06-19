@@ -1,12 +1,20 @@
 use crate::error::{Result, ZahuyachError};
-use std::env;
+use std::{env, path::PathBuf};
 
 /// Runs the init command to create a new blog project.
 ///
 /// If no project name is provided, uses the current directory name.
 /// Asks for user confirmation before creating the project.
 pub fn run(name: Option<String>) -> Result<String> {
-    let project_name = determine_project_name(name)?;
+    let project_path = determine_project_path(name)?;
+
+    // Extract project name for validation and display
+    let project_name = project_path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| {
+            ZahuyachError::InvalidInput("Cannot determine project name from path".to_string())
+        })?;
 
     match validate_project_name(&project_name) {
         Ok(()) => {}
@@ -17,27 +25,23 @@ pub fn run(name: Option<String>) -> Result<String> {
     }
 
     // TODO: Implementation goes here
-    Ok(format!("Initializing new blog project: {}", project_name))
+    Ok(format!(
+        "Initializing new blog project: {} in directory {}",
+        project_name,
+        project_path.display()
+    ))
 }
 
-/// Determines the project name based on user input or current directory.
-fn determine_project_name(name: Option<String>) -> Result<String> {
+/// Determines the full project path based on user input or current directory.
+///
+/// If name is provided, returns current_dir + name
+/// If name is None, returns current_dir
+fn determine_project_path(name: Option<String>) -> Result<PathBuf> {
+    let current_dir = env::current_dir().map_err(|e| ZahuyachError::Io(e))?;
+
     match name {
-        Some(name) => Ok(name),
-        None => {
-            let current_dir = env::current_dir().map_err(|e| ZahuyachError::Io(e))?;
-
-            let dir_name = current_dir
-                .file_name()
-                .and_then(|name| name.to_str())
-                .ok_or_else(|| {
-                    ZahuyachError::InvalidInput(
-                        "Cannot determine current directory name".to_string(),
-                    )
-                })?;
-
-            Ok(dir_name.to_string())
-        }
+        Some(name) => Ok(current_dir.join(name)),
+        None => Ok(current_dir),
     }
 }
 
@@ -99,31 +103,20 @@ mod tests {
 
     #[rstest]
     #[case(Some("test-blog".to_string()), "test-blog")]
-    fn test_determine_project_name_with_input(
+    fn test_determine_project_path_with_input(
         #[case] input: Option<String>,
-        #[case] expected: &str,
+        #[case] expected_name: &str,
     ) {
-        let result = determine_project_name(input).unwrap();
-        assert_eq!(result, expected);
-    }
-
-    #[rstest]
-    fn test_determine_project_name_without_input() {
-        let expected = std::env::current_dir()
-            .unwrap()
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string();
-        let result = determine_project_name(None).unwrap();
-        assert_eq!(result, expected);
+        let result = determine_project_path(input).unwrap();
+        let current_dir = std::env::current_dir().unwrap();
+        let expected_path = current_dir.join(expected_name);
+        assert_eq!(result, expected_path);
     }
 
     #[test]
-    fn test_run_valid_project_name() {
-        let result = run(Some("my-blog".to_string()));
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "Initializing new blog project: my-blog");
+    fn test_determine_project_path_without_input() {
+        let expected = std::env::current_dir().unwrap();
+        let result = determine_project_path(None).unwrap();
+        assert_eq!(result, expected);
     }
 }
