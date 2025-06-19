@@ -8,16 +8,15 @@ pub fn run(port: u16) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
-    #[test]
-    fn test_serve_command_default_port() {
-        let result = run(3000).unwrap();
-        assert_eq!(result, "Serving blog project on port 3000");
-    }
-
-    #[test]
-    fn test_serve_command_custom_port() {
-        let result = run(8080).unwrap();
-        assert_eq!(result, "Serving blog project on port 8080");
+    #[rstest]
+    #[case(1, "Serving blog project on port 1")]
+    #[case(3000, "Serving blog project on port 3000")]
+    #[case(8080, "Serving blog project on port 8080")]
+    #[case(65535, "Serving blog project on port 65535")]
+    fn test_serve_command(#[case] port: u16, #[case] expected: &str) {
+        let result = run(port).unwrap();
+        assert_eq!(result, expected);
     }
 }
