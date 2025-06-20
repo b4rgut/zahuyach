@@ -16,13 +16,7 @@ pub fn run(name: Option<String>) -> Result<String> {
             ZahuyachError::InvalidInput("Cannot determine project name from path".to_string())
         })?;
 
-    match validate_project_name(&project_name) {
-        Ok(()) => {}
-        Err(err) => {
-            eprintln!("{}", err);
-            return Err(err);
-        }
-    }
+    validate_project_name(&project_name)?;
 
     // TODO: Implementation goes here
     Ok(format!(
