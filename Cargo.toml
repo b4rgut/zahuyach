@@ -12,7 +12,6 @@ authors = ["Aleksey Kalsin <aleksey@kalsin.pro>"]
 
 [dependencies]
 clap = { version = "4.5.40", features = ["derive"] }
-dialoguer = "0.11.0"
 rstest = "0.25.0"
 rust-embed = "8.7.2"
 
