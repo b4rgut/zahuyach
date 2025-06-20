@@ -1,12 +1,14 @@
 use crate::error::{Result, ZahuyachError};
-use std::{env, path::PathBuf};
+use crate::templates;
+use std::{env, fs, path::PathBuf};
 
 /// Runs the init command to create a new blog project.
 ///
 /// If no project name is provided, uses the current directory name.
 /// Asks for user confirmation before creating the project.
 pub fn run(name: Option<String>) -> Result<String> {
-    let project_path = determine_project_path(name)?;
+    let name_ref = name.as_ref();
+    let project_path = determine_project_path(name_ref)?;
 
     // Extract project name for validation and display
     let project_name = project_path
@@ -18,9 +20,40 @@ pub fn run(name: Option<String>) -> Result<String> {
 
     validate_project_name(&project_name)?;
 
-    // TODO: Implementation goes here
+    // Check if directory exists and is not empty (if we're creating a subdirectory)
+    if name_ref.is_some() {
+        if project_path.exists() {
+            let is_empty = fs::read_dir(&project_path)
+                .map_err(|e| ZahuyachError::Io(e))?
+                .next()
+                .is_none();
+
+            if !is_empty {
+                return Err(ZahuyachError::InvalidInput(format!(
+                    "Directory '{}' already exists and is not empty",
+                    project_path.display()
+                )));
+            }
+        }
+    } else {
+        // Using current directory - check if it's empty
+        let is_empty = fs::read_dir(&project_path)
+            .map_err(|e| ZahuyachError::Io(e))?
+            .next()
+            .is_none();
+
+        if !is_empty {
+            return Err(ZahuyachError::InvalidInput(
+                    "Current directory is not empty. Please run in an empty directory or specify a project name.".to_string()
+                ));
+        }
+    }
+
+    // Copy the basic template to the project directory
+    templates::copy_basic_template(&project_path)?;
+
     Ok(format!(
-        "Initializing new blog project: {} in directory {}",
+        "Successfully initialized new blog project: {} in directory {}",
         project_name,
         project_path.display()
     ))
@@ -30,7 +63,7 @@ pub fn run(name: Option<String>) -> Result<String> {
 ///
 /// If name is provided, returns current_dir + name
 /// If name is None, returns current_dir
-fn determine_project_path(name: Option<String>) -> Result<PathBuf> {
+fn determine_project_path(name: Option<&String>) -> Result<PathBuf> {
     let current_dir = env::current_dir().map_err(|e| ZahuyachError::Io(e))?;
 
     match name {
@@ -101,7 +134,7 @@ mod tests {
         #[case] input: Option<String>,
         #[case] expected_name: &str,
     ) {
-        let result = determine_project_path(input).unwrap();
+        let result = determine_project_path(input.as_ref()).unwrap();
         let current_dir = std::env::current_dir().unwrap();
         let expected_path = current_dir.join(expected_name);
         assert_eq!(result, expected_path);
