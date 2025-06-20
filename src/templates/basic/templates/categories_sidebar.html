@@ -1,0 +1,408 @@
+<!-- Categories sidebar -->
+<div class="categories-sidebar h-full flex flex-col">
+    <!-- Sidebar header -->
+    <div class="p-6 border-b border-gh-border-default">
+        <h3 class="text-lg font-semibold text-gh-fg-default mb-4">Навигация</h3>
+
+        <!-- Quick search within categories -->
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-4 w-4 text-gh-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <input
+                type="text"
+                id="category-search"
+                placeholder="Поиск категорий..."
+                class="block w-full pl-10 pr-3 py-2 text-sm bg-gh-canvas-inset border border-gh-border-default rounded-md text-gh-fg-default placeholder-gh-fg-muted focus:outline-none focus:ring-2 focus:ring-gh-accent-emphasis focus:border-gh-accent-emphasis transition-colors"
+                hx-post="/api/categories/search"
+                hx-trigger="keyup changed delay:300ms"
+                hx-target="#categories-tree"
+                hx-indicator="#category-search-indicator"
+            >
+            <div id="category-search-indicator" class="htmx-indicator absolute inset-y-0 right-0 pr-3 flex items-center">
+                <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-gh-accent-fg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories tree -->
+    <div class="flex-1 overflow-y-auto p-6">
+        <div id="categories-tree">
+            {{> categories_tree}}
+        </div>
+    </div>
+
+    <!-- Popular tags -->
+    <div class="p-6 border-t border-gh-border-default">
+        <h4 class="text-sm font-semibold text-gh-fg-default mb-3">Популярные теги</h4>
+        <div class="flex flex-wrap gap-2">
+            {{#each popular_tags}}
+            <button
+                class="tag-filter inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gh-canvas-subtle text-gh-fg-muted hover:bg-gh-accent-subtle hover:text-gh-accent-fg border border-gh-border-default hover:border-gh-accent-emphasis transition-all cursor-pointer"
+                data-tag="{{name}}"
+                title="{{count}} статей"
+            >
+                {{name}}
+                <span class="ml-1 text-xs text-gh-fg-subtle">{{count}}</span>
+            </button>
+            {{/each}}
+        </div>
+    </div>
+
+    <!-- Recent posts -->
+    <div class="p-6 border-t border-gh-border-default">
+        <h4 class="text-sm font-semibold text-gh-fg-default mb-3">Недавние статьи</h4>
+        <div class="space-y-3">
+            {{#each recent_posts}}
+            <div class="group">
+                <a
+                    href="/posts/{{slug}}"
+                    class="block text-sm text-gh-fg-muted group-hover:text-gh-fg-default transition-colors line-clamp-2 leading-snug"
+                    title="{{title}}"
+                >
+                    {{title}}
+                </a>
+                <div class="flex items-center mt-1 text-xs text-gh-fg-subtle">
+                    <time datetime="{{date_iso}}">{{date_short}}</time>
+                    {{#if reading_time}}
+                    <span class="mx-1">•</span>
+                    <span>{{reading_time}} мин</span>
+                    {{/if}}
+                </div>
+            </div>
+            {{/each}}
+        </div>
+        <div class="mt-4">
+            <a
+                href="/archive"
+                class="inline-flex items-center text-xs text-gh-accent-fg hover:text-gh-accent-muted font-medium"
+            >
+                Все статьи
+                <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Categories tree template -->
+<script type="text/template" id="categories-tree-template">
+<div class="categories-tree-container">
+    {{#each categories}}
+    <div class="category-item" data-category="{{slug}}">
+        <div class="category-header">
+            <button
+                class="category-toggle flex items-center w-full text-left py-2 px-3 rounded-md hover:bg-gh-canvas-subtle transition-colors group"
+                onclick="toggleCategory('{{slug}}')"
+                data-category="{{slug}}"
+            >
+                <!-- Expand/collapse icon -->
+                <svg
+                    class="category-icon w-4 h-4 mr-2 text-gh-fg-muted transform transition-transform {{#if expanded}}rotate-90{{/if}}"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+
+                <!-- Category icon -->
+                <svg class="w-4 h-4 mr-2 text-gh-fg-muted group-hover:text-gh-accent-fg transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                </svg>
+
+                <!-- Category name and count -->
+                <span class="flex-1 text-sm font-medium text-gh-fg-default group-hover:text-gh-accent-fg transition-colors">
+                    {{name}}
+                </span>
+                <span class="text-xs text-gh-fg-subtle bg-gh-canvas-inset px-2 py-0.5 rounded-full">{{count}}</span>
+            </button>
+        </div>
+
+        <!-- Subcategories -->
+        {{#if subcategories}}
+        <div
+            class="category-children ml-6 {{#unless expanded}}hidden{{/unless}}"
+            data-category-children="{{slug}}"
+        >
+            {{#each subcategories}}
+            <div class="subcategory-item">
+                <a
+                    href="/categories/{{../slug}}/{{slug}}"
+                    class="flex items-center py-1.5 px-3 rounded-md text-sm text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle transition-colors group"
+                    hx-get="/api/posts/category/{{../slug}}/{{slug}}"
+                    hx-target="#posts-container"
+                    hx-push-url="true"
+                >
+                    <!-- Subcategory icon -->
+                    <svg class="w-3 h-3 mr-2 text-gh-fg-subtle group-hover:text-gh-accent-fg transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="flex-1">{{name}}</span>
+                    <span class="text-xs text-gh-fg-subtle">{{count}}</span>
+                </a>
+            </div>
+            {{/each}}
+        </div>
+        {{/if}}
+
+        <!-- Direct posts in category -->
+        {{#if has_direct_posts}}
+        <div
+            class="category-posts ml-6 {{#unless expanded}}hidden{{/unless}}"
+            data-category-posts="{{slug}}"
+        >
+            <a
+                href="/categories/{{slug}}"
+                class="flex items-center py-1.5 px-3 rounded-md text-sm text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle transition-colors group"
+                hx-get="/api/posts/category/{{slug}}"
+                hx-target="#posts-container"
+                hx-push-url="true"
+            >
+                <!-- Posts icon -->
+                <svg class="w-3 h-3 mr-2 text-gh-fg-subtle group-hover:text-gh-accent-fg transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span class="flex-1">Все статьи</span>
+                <span class="text-xs text-gh-fg-subtle">{{direct_posts_count}}</span>
+            </a>
+        </div>
+        {{/if}}
+    </div>
+    {{/each}}
+</div>
+</script>
+
+<style>
+.categories-sidebar {
+    max-height: calc(100vh - 4rem);
+}
+
+.category-item {
+    @apply mb-1;
+}
+
+.category-children {
+    @apply transition-all duration-200 ease-in-out;
+}
+
+.category-children.hidden {
+    @apply opacity-0 max-h-0 overflow-hidden;
+}
+
+.category-children:not(.hidden) {
+    @apply opacity-100 max-h-screen;
+}
+
+.category-icon.rotate-90 {
+    transform: rotate(90deg);
+}
+
+/* Scrollbar styling for sidebar */
+.categories-sidebar ::-webkit-scrollbar {
+    width: 6px;
+}
+
+.categories-sidebar ::-webkit-scrollbar-track {
+    @apply bg-gh-canvas-subtle;
+}
+
+.categories-sidebar ::-webkit-scrollbar-thumb {
+    @apply bg-gh-border-default rounded-full;
+}
+
+.categories-sidebar ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gh-border-muted;
+}
+
+/* Animation for category expansion */
+.category-children {
+    transition: max-height 0.3s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+/* Active category highlighting */
+.category-item.active > .category-header > .category-toggle {
+    @apply bg-gh-accent-subtle text-gh-accent-fg;
+}
+
+.category-item.active > .category-header > .category-toggle .category-icon {
+    @apply text-gh-accent-fg;
+}
+
+/* Search highlighting */
+.category-item.search-match {
+    @apply bg-gh-accent-subtle bg-opacity-30 rounded-md;
+}
+
+.category-item.search-match > .category-header > .category-toggle {
+    @apply text-gh-accent-fg;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize category states from localStorage
+    const expandedCategories = JSON.parse(localStorage.getItem('expandedCategories') || '[]');
+    expandedCategories.forEach(categorySlug => {
+        expandCategory(categorySlug, false);
+    });
+
+    // Set active category based on current URL
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/categories/')) {
+        const categorySlug = currentPath.split('/')[2];
+        setActiveCategory(categorySlug);
+    }
+});
+
+// Toggle category expansion
+function toggleCategory(categorySlug) {
+    const categoryItem = document.querySelector(`[data-category="${categorySlug}"]`);
+    const children = document.querySelector(`[data-category-children="${categorySlug}"]`);
+    const posts = document.querySelector(`[data-category-posts="${categorySlug}"]`);
+    const icon = categoryItem.querySelector('.category-icon');
+
+    const isExpanded = !children?.classList.contains('hidden') || !posts?.classList.contains('hidden');
+
+    if (isExpanded) {
+        collapseCategory(categorySlug);
+    } else {
+        expandCategory(categorySlug);
+    }
+}
+
+// Expand category
+function expandCategory(categorySlug, saveState = true) {
+    const categoryItem = document.querySelector(`[data-category="${categorySlug}"]`);
+    const children = document.querySelector(`[data-category-children="${categorySlug}"]`);
+    const posts = document.querySelector(`[data-category-posts="${categorySlug}"]`);
+    const icon = categoryItem?.querySelector('.category-icon');
+
+    if (children) {
+        children.classList.remove('hidden');
+    }
+    if (posts) {
+        posts.classList.remove('hidden');
+    }
+    if (icon) {
+        icon.classList.add('rotate-90');
+    }
+
+    if (saveState) {
+        const expandedCategories = JSON.parse(localStorage.getItem('expandedCategories') || '[]');
+        if (!expandedCategories.includes(categorySlug)) {
+            expandedCategories.push(categorySlug);
+            localStorage.setItem('expandedCategories', JSON.stringify(expandedCategories));
+        }
+    }
+}
+
+// Collapse category
+function collapseCategory(categorySlug) {
+    const categoryItem = document.querySelector(`[data-category="${categorySlug}"]`);
+    const children = document.querySelector(`[data-category-children="${categorySlug}"]`);
+    const posts = document.querySelector(`[data-category-posts="${categorySlug}"]`);
+    const icon = categoryItem?.querySelector('.category-icon');
+
+    if (children) {
+        children.classList.add('hidden');
+    }
+    if (posts) {
+        posts.classList.add('hidden');
+    }
+    if (icon) {
+        icon.classList.remove('rotate-90');
+    }
+
+    // Update localStorage
+    const expandedCategories = JSON.parse(localStorage.getItem('expandedCategories') || '[]');
+    const index = expandedCategories.indexOf(categorySlug);
+    if (index > -1) {
+        expandedCategories.splice(index, 1);
+        localStorage.setItem('expandedCategories', JSON.stringify(expandedCategories));
+    }
+}
+
+// Set active category
+function setActiveCategory(categorySlug) {
+    // Remove previous active states
+    document.querySelectorAll('.category-item.active').forEach(item => {
+        item.classList.remove('active');
+    });
+
+    // Set new active state
+    const categoryItem = document.querySelector(`[data-category="${categorySlug}"]`);
+    if (categoryItem) {
+        categoryItem.classList.add('active');
+
+        // Expand parent categories if needed
+        let parent = categoryItem.parentElement;
+        while (parent && parent.classList.contains('category-children')) {
+            const parentCategorySlug = parent.dataset.categoryChildren;
+            if (parentCategorySlug) {
+                expandCategory(parentCategorySlug, false);
+            }
+            parent = parent.parentElement?.parentElement;
+        }
+    }
+}
+
+// Search categories
+function searchCategories(query) {
+    const categoryItems = document.querySelectorAll('.category-item');
+
+    if (!query.trim()) {
+        // Reset search
+        categoryItems.forEach(item => {
+            item.classList.remove('search-match');
+            item.style.display = '';
+        });
+        return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+
+    categoryItems.forEach(item => {
+        const categoryName = item.querySelector('.category-toggle span').textContent.toLowerCase();
+        const isMatch = categoryName.includes(lowerQuery);
+
+        if (isMatch) {
+            item.classList.add('search-match');
+            item.style.display = '';
+
+            // Expand parent if it's a subcategory
+            let parent = item.parentElement;
+            while (parent && parent.classList.contains('category-children')) {
+                parent.classList.remove('hidden');
+                parent = parent.parentElement?.parentElement;
+            }
+        } else {
+            item.classList.remove('search-match');
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Handle category search input
+document.addEventListener('input', function(e) {
+    if (e.target.id === 'category-search') {
+        const query = e.target.value;
+        searchCategories(query);
+    }
+});
+
+// Handle HTMX events
+document.addEventListener('htmx:afterRequest', function(event) {
+    if (event.detail.target.id === 'posts-container') {
+        // Update URL and active category
+        const url = new URL(event.detail.xhr.responseURL);
+        if (url.pathname.startsWith('/categories/')) {
+            const categorySlug = url.pathname.split('/')[2];
+            setActiveCategory(categorySlug);
+        }
+    }
+});
+</script>

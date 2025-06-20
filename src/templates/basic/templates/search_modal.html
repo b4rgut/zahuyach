@@ -1,0 +1,473 @@
+<!-- Search modal -->
+<div class="search-modal p-6">
+    <!-- Search header -->
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-gh-fg-default">Поиск по блогу</h3>
+        <button
+            id="close-search"
+            class="p-2 text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle rounded-md transition-colors"
+            onclick="closeSearchModal()"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Main search input -->
+    <div class="relative mb-6">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gh-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+        </div>
+        <input
+            type="text"
+            id="modal-search-input"
+            placeholder="Введите поисковый запрос..."
+            class="block w-full pl-12 pr-4 py-3 bg-gh-canvas-inset border border-gh-border-default rounded-lg text-gh-fg-default placeholder-gh-fg-muted focus:outline-none focus:ring-2 focus:ring-gh-accent-emphasis focus:border-gh-accent-emphasis transition-colors text-lg"
+            hx-post="/api/search/advanced"
+            hx-trigger="keyup changed delay:300ms"
+            hx-target="#search-results"
+            hx-indicator="#modal-search-indicator"
+            hx-include="#search-filters"
+            autocomplete="off"
+            autofocus
+        >
+        <div id="modal-search-indicator" class="htmx-indicator absolute inset-y-0 right-0 pr-4 flex items-center">
+            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-gh-accent-fg"></div>
+        </div>
+    </div>
+
+    <!-- Search filters -->
+    <div id="search-filters" class="mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Category filter -->
+            <div>
+                <label class="block text-sm font-medium text-gh-fg-default mb-2">Категория</label>
+                <select
+                    name="category"
+                    class="w-full bg-gh-canvas-inset border border-gh-border-default rounded-md px-3 py-2 text-gh-fg-default focus:outline-none focus:ring-2 focus:ring-gh-accent-emphasis focus:border-gh-accent-emphasis transition-colors"
+                >
+                    <option value="">Все категории</option>
+                    {{#each categories}}
+                    <option value="{{slug}}">{{name}}</option>
+                    {{/each}}
+                </select>
+            </div>
+
+            <!-- Date range filter -->
+            <div>
+                <label class="block text-sm font-medium text-gh-fg-default mb-2">Период</label>
+                <select
+                    name="date_range"
+                    class="w-full bg-gh-canvas-inset border border-gh-border-default rounded-md px-3 py-2 text-gh-fg-default focus:outline-none focus:ring-2 focus:ring-gh-accent-emphasis focus:border-gh-accent-emphasis transition-colors"
+                >
+                    <option value="">Все время</option>
+                    <option value="week">Последняя неделя</option>
+                    <option value="month">Последний месяц</option>
+                    <option value="3months">Последние 3 месяца</option>
+                    <option value="year">Последний год</option>
+                </select>
+            </div>
+
+            <!-- Sort filter -->
+            <div>
+                <label class="block text-sm font-medium text-gh-fg-default mb-2">Сортировка</label>
+                <select
+                    name="sort"
+                    class="w-full bg-gh-canvas-inset border border-gh-border-default rounded-md px-3 py-2 text-gh-fg-default focus:outline-none focus:ring-2 focus:ring-gh-accent-emphasis focus:border-gh-accent-emphasis transition-colors"
+                >
+                    <option value="relevance">По релевантности</option>
+                    <option value="date_desc">Сначала новые</option>
+                    <option value="date_asc">Сначала старые</option>
+                    <option value="title">По названию</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tag filters -->
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gh-fg-default mb-2">Теги</label>
+            <div class="flex flex-wrap gap-2" id="search-tag-filters">
+                {{#each popular_tags}}
+                <button
+                    type="button"
+                    class="search-tag-filter inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-gh-canvas-subtle text-gh-fg-muted hover:bg-gh-accent-subtle hover:text-gh-accent-fg border border-gh-border-default hover:border-gh-accent-emphasis transition-all cursor-pointer"
+                    data-tag="{{name}}"
+                    onclick="toggleSearchTag('{{name}}')"
+                >
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    {{name}}
+                </button>
+                {{/each}}
+            </div>
+            <input type="hidden" name="tags" id="selected-tags" value="">
+        </div>
+
+        <!-- Advanced options toggle -->
+        <div class="mt-4">
+            <button
+                type="button"
+                class="flex items-center text-sm text-gh-accent-fg hover:text-gh-accent-muted transition-colors"
+                onclick="toggleAdvancedOptions()"
+            >
+                <svg class="w-4 h-4 mr-1 transform transition-transform" id="advanced-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                Дополнительные параметры
+            </button>
+        </div>
+
+        <!-- Advanced options -->
+        <div id="advanced-options" class="hidden mt-4 p-4 bg-gh-canvas-inset rounded-lg border border-gh-border-default">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Search in content -->
+                <div class="flex items-center">
+                    <input
+                        type="checkbox"
+                        name="search_content"
+                        id="search-content"
+                        class="h-4 w-4 text-gh-accent-emphasis focus:ring-gh-accent-emphasis border-gh-border-default rounded bg-gh-canvas-inset"
+                        checked
+                    >
+                    <label for="search-content" class="ml-2 text-sm text-gh-fg-default">Искать в содержимом</label>
+                </div>
+
+                <!-- Search in titles only -->
+                <div class="flex items-center">
+                    <input
+                        type="checkbox"
+                        name="search_titles"
+                        id="search-titles"
+                        class="h-4 w-4 text-gh-accent-emphasis focus:ring-gh-accent-emphasis border-gh-border-default rounded bg-gh-canvas-inset"
+                        checked
+                    >
+                    <label for="search-titles" class="ml-2 text-sm text-gh-fg-default">Искать в заголовках</label>
+                </div>
+
+                <!-- Case sensitive -->
+                <div class="flex items-center">
+                    <input
+                        type="checkbox"
+                        name="case_sensitive"
+                        id="case-sensitive"
+                        class="h-4 w-4 text-gh-accent-emphasis focus:ring-gh-accent-emphasis border-gh-border-default rounded bg-gh-canvas-inset"
+                    >
+                    <label for="case-sensitive" class="ml-2 text-sm text-gh-fg-default">Учитывать регистр</label>
+                </div>
+
+                <!-- Exact phrase -->
+                <div class="flex items-center">
+                    <input
+                        type="checkbox"
+                        name="exact_phrase"
+                        id="exact-phrase"
+                        class="h-4 w-4 text-gh-accent-emphasis focus:ring-gh-accent-emphasis border-gh-border-default rounded bg-gh-canvas-inset"
+                    >
+                    <label for="exact-phrase" class="ml-2 text-sm text-gh-fg-default">Точная фраза</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent searches -->
+    <div id="recent-searches" class="mb-6">
+        <h4 class="text-sm font-medium text-gh-fg-default mb-3">Недавние поиски</h4>
+        <div class="flex flex-wrap gap-2" id="recent-searches-list">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Search suggestions -->
+    <div id="search-suggestions" class="mb-6 hidden">
+        <h4 class="text-sm font-medium text-gh-fg-default mb-3">Возможно, вы искали</h4>
+        <div class="space-y-2" id="suggestions-list">
+            <!-- Will be populated by HTMX -->
+        </div>
+    </div>
+
+    <!-- Search results -->
+    <div id="search-results" class="search-results-container">
+        <div class="text-center py-8 text-gh-fg-muted">
+            <svg class="w-12 h-12 mx-auto mb-4 text-gh-fg-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <p>Начните вводить текст для поиска</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.search-modal {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.search-results-container {
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.search-tag-filter.active {
+    @apply bg-gh-accent-emphasis text-gh-fg-on-emphasis border-gh-accent-emphasis;
+}
+
+.search-result-item {
+    @apply p-4 border-b border-gh-border-muted hover:bg-gh-canvas-subtle transition-colors cursor-pointer;
+}
+
+.search-result-item:last-child {
+    @apply border-b-0;
+}
+
+.search-result-title {
+    @apply text-gh-fg-default font-medium mb-2 hover:text-gh-accent-fg transition-colors;
+}
+
+.search-result-excerpt {
+    @apply text-gh-fg-muted text-sm leading-relaxed mb-2;
+}
+
+.search-result-meta {
+    @apply flex items-center space-x-4 text-xs text-gh-fg-subtle;
+}
+
+.search-highlight {
+    @apply bg-gh-accent-subtle text-gh-accent-fg px-1 rounded;
+}
+
+.recent-search-item {
+    @apply inline-flex items-center px-3 py-1 bg-gh-canvas-subtle text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-inset rounded-md text-sm cursor-pointer transition-colors;
+}
+
+.suggestion-item {
+    @apply p-2 hover:bg-gh-canvas-subtle rounded-md cursor-pointer transition-colors;
+}
+
+/* Scrollbar styling */
+.search-modal ::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-modal ::-webkit-scrollbar-track {
+    @apply bg-gh-canvas-subtle;
+}
+
+.search-modal ::-webkit-scrollbar-thumb {
+    @apply bg-gh-border-default rounded-full;
+}
+
+.search-modal ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gh-border-muted;
+}
+
+/* Keyboard navigation */
+.search-result-item.keyboard-focus {
+    @apply bg-gh-canvas-subtle ring-2 ring-gh-accent-emphasis;
+}
+</style>
+
+<script>
+let selectedTags = [];
+let recentSearches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+let currentFocusIndex = -1;
+
+// Initialize search modal
+function initSearchModal() {
+    displayRecentSearches();
+    setupKeyboardNavigation();
+}
+
+// Toggle search tag
+function toggleSearchTag(tagName) {
+    const tagButton = document.querySelector(`[data-tag="${tagName}"]`);
+    const isActive = tagButton.classList.contains('active');
+
+    if (isActive) {
+        tagButton.classList.remove('active');
+        selectedTags = selectedTags.filter(tag => tag !== tagName);
+    } else {
+        tagButton.classList.add('active');
+        selectedTags.push(tagName);
+    }
+
+    document.getElementById('selected-tags').value = selectedTags.join(',');
+    triggerSearch();
+}
+
+// Toggle advanced options
+function toggleAdvancedOptions() {
+    const options = document.getElementById('advanced-options');
+    const chevron = document.getElementById('advanced-chevron');
+
+    if (options.classList.contains('hidden')) {
+        options.classList.remove('hidden');
+        chevron.classList.add('rotate-90');
+    } else {
+        options.classList.add('hidden');
+        chevron.classList.remove('rotate-90');
+    }
+}
+
+// Trigger search
+function triggerSearch() {
+    const searchInput = document.getElementById('modal-search-input');
+    if (searchInput.value.trim()) {
+        htmx.trigger(searchInput, 'keyup');
+    }
+}
+
+// Display recent searches
+function displayRecentSearches() {
+    const container = document.getElementById('recent-searches-list');
+    if (recentSearches.length === 0) {
+        document.getElementById('recent-searches').style.display = 'none';
+        return;
+    }
+
+    container.innerHTML = recentSearches.map(search => `
+        <button class="recent-search-item" onclick="useRecentSearch('${search}')">
+            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            ${search}
+        </button>
+    `).join('');
+}
+
+// Use recent search
+function useRecentSearch(search) {
+    const searchInput = document.getElementById('modal-search-input');
+    searchInput.value = search;
+    triggerSearch();
+}
+
+// Save search to recent
+function saveToRecentSearches(query) {
+    if (!query.trim() || recentSearches.includes(query)) return;
+
+    recentSearches.unshift(query);
+    recentSearches = recentSearches.slice(0, 5); // Keep only 5 recent searches
+    localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+    displayRecentSearches();
+}
+
+// Setup keyboard navigation
+function setupKeyboardNavigation() {
+    const searchInput = document.getElementById('modal-search-input');
+
+    searchInput.addEventListener('keydown', function(e) {
+        const results = document.querySelectorAll('.search-result-item');
+
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                currentFocusIndex = Math.min(currentFocusIndex + 1, results.length - 1);
+                updateKeyboardFocus(results);
+                break;
+
+            case 'ArrowUp':
+                e.preventDefault();
+                currentFocusIndex = Math.max(currentFocusIndex - 1, -1);
+                updateKeyboardFocus(results);
+                break;
+
+            case 'Enter':
+                e.preventDefault();
+                if (currentFocusIndex >= 0 && results[currentFocusIndex]) {
+                    results[currentFocusIndex].click();
+                } else if (searchInput.value.trim()) {
+                    saveToRecentSearches(searchInput.value.trim());
+                }
+                break;
+
+            case 'Escape':
+                closeSearchModal();
+                break;
+        }
+    });
+}
+
+// Update keyboard focus
+function updateKeyboardFocus(results) {
+    results.forEach((item, index) => {
+        if (index === currentFocusIndex) {
+            item.classList.add('keyboard-focus');
+            item.scrollIntoView({ block: 'nearest' });
+        } else {
+            item.classList.remove('keyboard-focus');
+        }
+    });
+}
+
+// Close search modal
+function closeSearchModal() {
+    const overlay = document.getElementById('search-overlay');
+    const searchInput = document.getElementById('modal-search-input');
+
+    if (searchInput.value.trim()) {
+        saveToRecentSearches(searchInput.value.trim());
+    }
+
+    overlay.classList.add('hidden');
+    currentFocusIndex = -1;
+}
+
+// Handle search result click
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.search-result-item')) {
+        const link = e.target.closest('.search-result-item').querySelector('a');
+        if (link) {
+            window.location.href = link.href;
+            closeSearchModal();
+        }
+    }
+});
+
+// Handle HTMX events
+document.addEventListener('htmx:afterRequest', function(event) {
+    if (event.target.id === 'search-results') {
+        currentFocusIndex = -1;
+        const query = document.getElementById('modal-search-input').value.trim();
+        if (query && event.detail.xhr.status === 200) {
+            // Show suggestions if no results found
+            const resultsCount = event.target.querySelectorAll('.search-result-item').length;
+            if (resultsCount === 0) {
+                showSearchSuggestions(query);
+            }
+        }
+    }
+});
+
+// Show search suggestions
+function showSearchSuggestions(query) {
+    // This would typically make an HTMX request for search suggestions
+    htmx.ajax('GET', `/api/search/suggestions?q=${encodeURIComponent(query)}`, {
+        target: '#suggestions-list',
+        swap: 'innerHTML'
+    }).then(() => {
+        document.getElementById('search-suggestions').classList.remove('hidden');
+    });
+}
+
+// Initialize when modal opens
+document.addEventListener('DOMContentLoaded', function() {
+    // Listen for search modal open
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'search-toggle' || e.target.closest('#search-toggle')) {
+            setTimeout(initSearchModal, 100);
+        }
+    });
+
+    // Close modal when clicking backdrop
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'search-backdrop') {
+            closeSearchModal();
+        }
+    });
+});
+</script>

@@ -1,0 +1,270 @@
+{{#> base}}
+{{#*inline "content"}}
+<!-- Toolbar -->
+<div class="sticky top-16 z-30 bg-gh-canvas-default/95 backdrop-blur border-b border-gh-border-default -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+        <!-- Search -->
+        <div class="flex-1 max-w-md">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gh-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Поиск статей..."
+                    class="block w-full pl-10 pr-3 py-2 bg-gh-canvas-inset border border-gh-border-default rounded-md text-gh-fg-default placeholder-gh-fg-muted focus:outline-none focus:ring-2 focus:ring-gh-accent-emphasis focus:border-gh-accent-emphasis transition-colors"
+                    hx-post="/api/search"
+                    hx-trigger="keyup changed delay:300ms"
+                    hx-target="#posts-container"
+                    hx-indicator="#search-indicator"
+                >
+                <div id="search-indicator" class="htmx-indicator absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gh-accent-fg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Sort -->
+        <div class="flex items-center space-x-4">
+            <!-- Sort -->
+            <select
+                id="sort-select"
+                class="bg-gh-canvas-inset border border-gh-border-default rounded-md px-3 py-2 text-gh-fg-default focus:outline-none focus:ring-2 focus:ring-gh-accent-emphasis focus:border-gh-accent-emphasis transition-colors"
+                hx-post="/api/sort"
+                hx-trigger="change"
+                hx-target="#posts-container"
+                hx-indicator="#sort-indicator"
+            >
+                <option value="date-desc">Сначала новые</option>
+                <option value="date-asc">Сначала старые</option>
+                <option value="title-asc">По названию А-Я</option>
+                <option value="title-desc">По названию Я-А</option>
+            </select>
+            <div id="sort-indicator" class="htmx-indicator">
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gh-accent-fg"></div>
+            </div>
+
+            <!-- View toggle -->
+            <div class="flex bg-gh-canvas-inset border border-gh-border-default rounded-md p-1">
+                <button
+                    id="grid-view"
+                    class="px-3 py-1 rounded text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle transition-colors"
+                    onclick="toggleView('grid')"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                    </svg>
+                </button>
+                <button
+                    id="list-view"
+                    class="px-3 py-1 rounded bg-gh-canvas-subtle text-gh-fg-default transition-colors"
+                    onclick="toggleView('list')"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active filters -->
+    <div id="active-filters" class="mt-4 hidden">
+        <div class="flex items-center flex-wrap gap-2">
+            <span class="text-sm text-gh-fg-muted">Активные фильтры:</span>
+            <!-- Tags will be added here dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Main content area -->
+<div class="flex lg:space-x-8">
+    <!-- Mobile sidebar toggle -->
+    <button
+        id="sidebar-toggle"
+        class="lg:hidden fixed bottom-6 right-6 z-40 bg-gh-accent-emphasis text-gh-fg-on-emphasis p-3 rounded-full shadow-lg hover:bg-opacity-90 transition-all"
+        onclick="toggleSidebar()"
+    >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+        </svg>
+    </button>
+
+    <!-- Posts container -->
+    <div class="flex-1 min-w-0">
+        <div id="posts-container" class="posts-list-view">
+            {{> posts_list}}
+        </div>
+
+        <!-- Infinite scroll trigger -->
+        <div
+            id="infinite-scroll-trigger"
+            class="flex justify-center py-8"
+            hx-get="/api/posts/next"
+            hx-trigger="intersect once"
+            hx-target="#posts-container"
+            hx-swap="beforeend"
+            hx-indicator="#load-more-indicator"
+        >
+            <div id="load-more-indicator" class="htmx-indicator">
+                <div class="flex items-center space-x-2 text-gh-fg-muted">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gh-accent-fg"></div>
+                    <span>Загрузка статей...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- End of posts message -->
+        <div id="end-of-posts" class="hidden text-center py-8">
+            <div class="inline-flex items-center space-x-2 text-gh-fg-muted">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span>Все статьи загружены</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop sidebar -->
+    <aside class="hidden lg:block w-80 flex-shrink-0">
+        <div class="sticky top-32">
+            {{> categories_sidebar}}
+        </div>
+    </aside>
+</div>
+
+<!-- Mobile sidebar overlay -->
+<div id="mobile-sidebar-overlay" class="lg:hidden fixed inset-0 z-30 hidden">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="toggleSidebar()"></div>
+    <div class="fixed top-0 right-0 h-full w-80 bg-gh-canvas-overlay border-l border-gh-border-default transform translate-x-full transition-transform duration-300" id="mobile-sidebar">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gh-fg-default">Категории</h3>
+                <button
+                    onclick="toggleSidebar()"
+                    class="p-2 text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle rounded-md transition-colors"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            {{> categories_sidebar}}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize view state
+    let currentView = 'list';
+
+    // Toggle between grid and list view
+    window.toggleView = function(view) {
+        currentView = view;
+        const container = document.getElementById('posts-container');
+        const gridBtn = document.getElementById('grid-view');
+        const listBtn = document.getElementById('list-view');
+
+        if (view === 'grid') {
+            container.className = 'posts-grid-view';
+            gridBtn.classList.add('bg-gh-canvas-subtle', 'text-gh-fg-default');
+            gridBtn.classList.remove('text-gh-fg-muted');
+            listBtn.classList.remove('bg-gh-canvas-subtle', 'text-gh-fg-default');
+            listBtn.classList.add('text-gh-fg-muted');
+        } else {
+            container.className = 'posts-list-view';
+            listBtn.classList.add('bg-gh-canvas-subtle', 'text-gh-fg-default');
+            listBtn.classList.remove('text-gh-fg-muted');
+            gridBtn.classList.remove('bg-gh-canvas-subtle', 'text-gh-fg-default');
+            gridBtn.classList.add('text-gh-fg-muted');
+        }
+    };
+
+    // Toggle mobile sidebar
+    window.toggleSidebar = function() {
+        const overlay = document.getElementById('mobile-sidebar-overlay');
+        const sidebar = document.getElementById('mobile-sidebar');
+
+        if (overlay.classList.contains('hidden')) {
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                sidebar.classList.remove('translate-x-full');
+            }, 10);
+        } else {
+            sidebar.classList.add('translate-x-full');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+    };
+
+    // Handle filter changes
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('.tag-filter')) {
+            e.preventDefault();
+            const tag = e.target.dataset.tag;
+            addTagFilter(tag);
+        }
+
+        if (e.target.matches('.remove-filter')) {
+            e.preventDefault();
+            const tag = e.target.dataset.tag;
+            removeTagFilter(tag);
+        }
+    });
+
+    function addTagFilter(tag) {
+        const activeFilters = document.getElementById('active-filters');
+        const existingFilter = activeFilters.querySelector(`[data-tag="${tag}"]`);
+
+        if (!existingFilter) {
+            const filterElement = document.createElement('span');
+            filterElement.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs bg-gh-accent-subtle text-gh-accent-fg border border-gh-accent-emphasis';
+            filterElement.innerHTML = `
+                ${tag}
+                <button class="ml-2 remove-filter" data-tag="${tag}">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            `;
+
+            activeFilters.querySelector('div').appendChild(filterElement);
+            activeFilters.classList.remove('hidden');
+
+            // Trigger filter update
+            htmx.ajax('POST', '/api/filter', {
+                target: '#posts-container',
+                values: { tag: tag, action: 'add' }
+            });
+        }
+    }
+
+    function removeTagFilter(tag) {
+        const activeFilters = document.getElementById('active-filters');
+        const filterElement = activeFilters.querySelector(`[data-tag="${tag}"]`).parentElement;
+
+        if (filterElement) {
+            filterElement.remove();
+
+            // Hide active filters if no filters remain
+            const remainingFilters = activeFilters.querySelectorAll('.remove-filter');
+            if (remainingFilters.length === 0) {
+                activeFilters.classList.add('hidden');
+            }
+
+            // Trigger filter update
+            htmx.ajax('POST', '/api/filter', {
+                target: '#posts-container',
+                values: { tag: tag, action: 'remove' }
+            });
+        }
+    }
+});
+</script>
+{{/inline}}
+{{/base}}

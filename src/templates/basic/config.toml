@@ -1,0 +1,270 @@
+# Zahuyach Blog Generator Configuration
+# Конфигурационный файл для генератора блога
+
+[site]
+# Основные настройки сайта
+title = "Мой Блог"
+description = "Персональный блог о технологиях, программировании и жизни"
+author = "Автор Блога"
+email = "author@example.com"
+base_url = "https://example.com"
+language = "ru"
+timezone = "Europe/Moscow"
+
+# Логотип и фавикон
+logo = "/static/logo.png"
+favicon = "/static/favicon.ico"
+
+# Социальные сети
+[site.social]
+github = "https://github.com/username"
+twitter = "https://twitter.com/username"
+linkedin = "https://linkedin.com/in/username"
+telegram = "https://t.me/username"
+email = "author@example.com"
+
+# Настройки сборки
+[build]
+# Выходная директория
+output_dir = "dist"
+# Директория с контентом
+content_dir = "content"
+# Директория со статическими файлами
+static_dir = "static"
+# Директория с шаблонами
+templates_dir = "templates"
+
+# Очистка выходной директории перед сборкой
+clean_output = true
+# Минификация HTML
+minify_html = true
+# Минификация CSS
+minify_css = true
+# Минификация JS
+minify_js = true
+
+# Настройки Markdown
+[markdown]
+# Расширения CommonMark
+enable_tables = true
+enable_footnotes = true
+enable_strikethrough = true
+enable_tasklists = true
+enable_smart_punctuation = true
+enable_heading_attributes = true
+
+# Подсветка синтаксиса
+syntax_highlighting = true
+syntax_theme = "github-dark"
+
+# Математические формулы
+enable_math = true
+math_engine = "katex"
+
+# Настройки изображений
+[images]
+# Автоматическое изменение размера
+auto_resize = true
+# Максимальная ширина
+max_width = 1200
+# Качество JPEG
+jpeg_quality = 85
+# Генерация WebP
+generate_webp = true
+# Ленивая загрузка
+lazy_loading = true
+
+# Настройки RSS
+[rss]
+# Включить RSS
+enabled = true
+# Количество постов в RSS
+limit = 20
+# Полное содержимое или только excerpt
+full_content = false
+# Имя файла RSS
+filename = "feed.xml"
+
+# Настройки пагинации
+[pagination]
+# Количество постов на странице
+posts_per_page = 10
+# Количество страниц в навигации
+pages_in_nav = 5
+# Бесконечная прокрутка
+infinite_scroll = true
+
+# Настройки поиска
+[search]
+# Включить поиск
+enabled = true
+# Поиск по содержимому
+search_content = true
+# Поиск по заголовкам
+search_titles = true
+# Поиск по тегам
+search_tags = true
+# Минимальная длина запроса
+min_query_length = 2
+# Максимальное количество результатов
+max_results = 50
+
+# Настройки SEO
+[seo]
+# Генерация sitemap.xml
+generate_sitemap = true
+# Robots.txt
+generate_robots = true
+# Open Graph метатеги
+enable_opengraph = true
+# Twitter Card метатеги
+enable_twitter_cards = true
+# JSON-LD структурированные данные
+enable_json_ld = true
+
+# Настройки комментариев
+[comments]
+# Система комментариев (none, disqus, giscus)
+system = "none"
+# Настройки Disqus
+disqus_shortname = ""
+# Настройки Giscus
+giscus_repo = ""
+giscus_repo_id = ""
+giscus_category = ""
+giscus_category_id = ""
+
+# Настройки аналитики
+[analytics]
+# Google Analytics
+google_analytics = ""
+# Яндекс Метрика
+yandex_metrika = ""
+# Plausible Analytics
+plausible_domain = ""
+
+# Настройки темы
+[theme]
+# Название темы
+name = "GitHub Dark"
+# Цветовая схема
+color_scheme = "dark"
+# Шрифты
+font_family = "system"
+# Показать дату чтения
+show_reading_time = true
+# Показать количество слов
+show_word_count = true
+# Показать теги
+show_tags = true
+# Показать категории
+show_categories = true
+# Показать автора
+show_author = true
+
+# Настройки навигации
+[navigation]
+# Главное меню
+[[navigation.main]]
+name = "Главная"
+url = "/"
+weight = 1
+
+[[navigation.main]]
+name = "Архив"
+url = "/archive/"
+weight = 2
+
+[[navigation.main]]
+name = "Теги"
+url = "/tags/"
+weight = 3
+
+[[navigation.main]]
+name = "О блоге"
+url = "/about/"
+weight = 4
+
+# Подвал
+[[navigation.footer]]
+name = "RSS"
+url = "/feed.xml"
+weight = 1
+
+[[navigation.footer]]
+name = "Sitemap"
+url = "/sitemap.xml"
+weight = 2
+
+# Настройки контента
+[content]
+# Автоматическое извлечение excerpt
+auto_excerpt = true
+# Длина excerpt в словах
+excerpt_length = 50
+# Разделитель excerpt
+excerpt_separator = "<!-- more -->"
+
+# Настройки дат
+date_format = "%d %B %Y"
+time_format = "%H:%M"
+datetime_format = "%d %B %Y в %H:%M"
+
+# Настройки тегов и категорий
+[taxonomy]
+# Включить теги
+enable_tags = true
+# Включить категории
+enable_categories = true
+# Минимальное количество постов для отображения тега
+min_tag_count = 1
+# Максимальное количество тегов в облаке
+max_tags_in_cloud = 50
+
+# Настройки производительности
+[performance]
+# Кэширование
+enable_cache = true
+# Время жизни кэша в секундах
+cache_ttl = 3600
+# Сжатие статических файлов
+compress_static = true
+# Preload критических ресурсов
+preload_critical = true
+
+# Настройки разработки
+[development]
+# Порт для локального сервера
+port = 3000
+# Автоматическая перезагрузка
+auto_reload = true
+# Режим отладки
+debug = false
+# Показать черновики
+show_drafts = false
+
+# Настройки безопасности
+[security]
+# Content Security Policy
+enable_csp = true
+# X-Frame-Options
+enable_frame_options = true
+# X-Content-Type-Options
+enable_content_type_options = true
+# Referrer Policy
+referrer_policy = "strict-origin-when-cross-origin"
+
+# Пользовательские настройки
+[custom]
+# Показать кнопку "Наверх"
+show_scroll_to_top = true
+# Показать прогресс чтения
+show_reading_progress = true
+# Темная тема по умолчанию
+default_dark_theme = true
+# Переключатель темы
+theme_switcher = false
+# Кнопка печати
+show_print_button = true
+# Кнопка "Поделиться"
+show_share_buttons = true

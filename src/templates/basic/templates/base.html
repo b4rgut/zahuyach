@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{#if page.description}}{{page.description}}{{else}}{{site.description}}{{/if}}">
+    <title>{{#if page.title}}{{page.title}} - {{site.title}}{{else}}{{site.title}}{{/if}}</title>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <!-- Tailwind CSS with GitHub Dark theme -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'gh-canvas-default': '#0d1117',
+                        'gh-canvas-overlay': '#161b22',
+                        'gh-canvas-inset': '#21262d',
+                        'gh-canvas-subtle': '#30363d',
+                        'gh-border-default': '#30363d',
+                        'gh-border-muted': '#21262d',
+                        'gh-neutral-emphasis': '#6e7681',
+                        'gh-neutral-muted': '#656d76',
+                        'gh-neutral-subtle': '#6e7681',
+                        'gh-accent-fg': '#58a6ff',
+                        'gh-accent-emphasis': '#1f6feb',
+                        'gh-accent-muted': '#58a6ff',
+                        'gh-accent-subtle': '#388bfd26',
+                        'gh-success-fg': '#3fb950',
+                        'gh-attention-fg': '#d29922',
+                        'gh-severe-fg': '#db6d28',
+                        'gh-danger-fg': '#f85149',
+                        'gh-done-fg': '#a5a3ff',
+                        'gh-sponsors-fg': '#db61a2',
+                        'gh-fg-default': '#e6edf3',
+                        'gh-fg-muted': '#7d8590',
+                        'gh-fg-subtle': '#6e7681',
+                        'gh-fg-on-emphasis': '#ffffff'
+                    },
+                    fontFamily: {
+                        'mono': ['SFMono-Regular', 'Consolas', 'Liberation Mono', 'Menlo', 'monospace'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.2s ease-in-out',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'pulse-subtle': 'pulseSubtle 1.5s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateY(-10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        pulseSubtle: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.7' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+
+    <!-- RSS Feed -->
+    <link rel="alternate" type="application/rss+xml" title="{{site.title}} RSS" href="/feed.xml">
+</head>
+<body class="h-full bg-gh-canvas-default text-gh-fg-default font-sans antialiased">
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gh-accent-emphasis text-gh-fg-on-emphasis px-4 py-2 rounded-md z-50">
+        Перейти к основному содержанию
+    </a>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-gh-canvas-default/95 backdrop-blur border-b border-gh-border-default">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo/Title -->
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3 text-gh-fg-default hover:text-gh-accent-fg transition-colors">
+                        {{#if site.logo}}
+                        <img src="{{site.logo}}" alt="{{site.title}}" class="h-8 w-8 rounded">
+                        {{/if}}
+                        <span class="text-xl font-semibold">{{site.title}}</span>
+                    </a>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="text-gh-fg-muted hover:text-gh-fg-default transition-colors">Главная</a>
+                    <a href="/archive" class="text-gh-fg-muted hover:text-gh-fg-default transition-colors">Архив</a>
+                    <a href="/tags" class="text-gh-fg-muted hover:text-gh-fg-default transition-colors">Теги</a>
+                    <a href="/about" class="text-gh-fg-muted hover:text-gh-fg-default transition-colors">О блоге</a>
+                </nav>
+
+                <!-- Search toggle -->
+                <div class="flex items-center space-x-4">
+                    <button
+                        id="search-toggle"
+                        class="p-2 text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle rounded-md transition-colors"
+                        aria-label="Открыть поиск"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Mobile menu button -->
+                    <button
+                        id="mobile-menu-toggle"
+                        class="md:hidden p-2 text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle rounded-md transition-colors"
+                        aria-label="Открыть меню"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile menu -->
+            <div id="mobile-menu" class="md:hidden hidden border-t border-gh-border-default">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="/" class="block px-3 py-2 text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle rounded-md transition-colors">Главная</a>
+                    <a href="/archive" class="block px-3 py-2 text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle rounded-md transition-colors">Архив</a>
+                    <a href="/tags" class="block px-3 py-2 text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle rounded-md transition-colors">Теги</a>
+                    <a href="/about" class="block px-3 py-2 text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle rounded-md transition-colors">О блоге</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search overlay -->
+    <div id="search-overlay" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" id="search-backdrop"></div>
+        <div class="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-2xl mx-auto px-4">
+            <div class="bg-gh-canvas-overlay border border-gh-border-default rounded-lg shadow-2xl">
+                {{> search_modal}}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main layout -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="hidden lg:flex lg:flex-shrink-0">
+            <div class="flex flex-col w-80 border-r border-gh-border-default bg-gh-canvas-overlay">
+                {{> sidebar}}
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main id="main-content" class="flex-1 min-w-0">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {{> content}}
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-gh-border-default bg-gh-canvas-overlay">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-gh-fg-muted text-sm">
+                    © {{current_year}} {{site.title}}. Сгенерировано с помощью Zahuyach.
+                </div>
+                <div class="flex items-center space-x-6 mt-4 md:mt-0">
+                    {{#if site.github}}
+                    <a href="{{site.github}}" class="text-gh-fg-muted hover:text-gh-fg-default transition-colors" aria-label="GitHub">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                    {{/if}}
+                    {{#if site.twitter}}
+                    <a href="{{site.twitter}}" class="text-gh-fg-muted hover:text-gh-fg-default transition-colors" aria-label="Twitter">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        </svg>
+                    </a>
+                    {{/if}}
+                    <a href="/feed.xml" class="text-gh-fg-muted hover:text-gh-fg-default transition-colors" aria-label="RSS">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6.503 20.752c0 1.794-1.456 3.248-3.251 3.248-1.796 0-3.252-1.454-3.252-3.248 0-1.794 1.456-3.248 3.252-3.248 1.795.001 3.251 1.454 3.251 3.248zm-6.503-12.572v4.811c6.05.062 10.96 4.966 11.022 11.009h4.817c-.062-8.71-7.118-15.758-15.839-15.82zm0-3.368c10.58.046 19.152 8.594 19.183 19.188h4.817c-.03-13.231-10.755-23.954-24-24v4.812z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- HTMX indicators -->
+    <div id="htmx-indicator" class="htmx-indicator fixed top-4 right-4 z-50">
+        <div class="bg-gh-canvas-overlay border border-gh-border-default rounded-lg px-4 py-2 shadow-lg">
+            <div class="flex items-center space-x-2">
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gh-accent-fg"></div>
+                <span class="text-sm text-gh-fg-muted">Загрузка...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
