@@ -7,28 +7,28 @@ use std::path::Path;
 #[folder = "src/templates/basic"]
 pub struct BasicTemplate;
 
-/// Копирует базовый шаблон в указанную директорию
+/// Copies the basic template to the specified directory
 pub fn copy_basic_template<P: AsRef<Path>>(target_dir: P) -> Result<()> {
     let target_dir = target_dir.as_ref();
 
-    // Создаем целевую директорию если она не существует
+    // Create the target directory if it doesn't exist
     fs::create_dir_all(target_dir).map_err(|e| ZahuyachError::Io(e))?;
 
-    // Перебираем все встроенные файлы
+    // Iterate through all embedded files
     for file_path in BasicTemplate::iter() {
         let file_data = BasicTemplate::get(&file_path).ok_or_else(|| {
             ZahuyachError::InvalidInput(format!("Failed to get embedded file: {}", file_path))
         })?;
 
-        // Создаем полный путь к файлу в целевой директории
+        // Create the full path to the file in the target directory
         let target_file_path = target_dir.join(file_path.as_ref());
 
-        // Создаем родительские директории если нужно
+        // Create parent directories if needed
         if let Some(parent) = target_file_path.parent() {
             fs::create_dir_all(parent).map_err(|e| ZahuyachError::Io(e))?;
         }
 
-        // Записываем содержимое файла
+        // Write the file content
         fs::write(&target_file_path, file_data.data).map_err(|e| ZahuyachError::Io(e))?;
 
         println!("Created: {}", target_file_path.display());
@@ -37,7 +37,7 @@ pub fn copy_basic_template<P: AsRef<Path>>(target_dir: P) -> Result<()> {
     Ok(())
 }
 
-/// Возвращает список всех файлов в базовом шаблоне
+/// Returns a list of all files in the basic template
 pub fn list_basic_template_files() -> Vec<String> {
     BasicTemplate::iter().map(|f| f.to_string()).collect()
 }
@@ -51,7 +51,7 @@ mod tests {
     fn test_list_basic_template_files() {
         let files = list_basic_template_files();
         assert!(!files.is_empty(), "Should have some template files");
-        // Проверяем что есть config.toml
+        // Check that config.toml exists
         assert!(files.iter().any(|f| f.ends_with("config.toml")));
     }
 
@@ -62,7 +62,7 @@ mod tests {
 
         assert!(result.is_ok());
 
-        // Проверяем что config.toml был создан
+        // Check that config.toml was created
         let config_path = temp_dir.path().join("config.toml");
         assert!(config_path.exists());
     }
