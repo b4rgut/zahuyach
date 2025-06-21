@@ -77,7 +77,7 @@ impl Cli {
     /// or `Err(ZahuyachError)` if an error occurs during command execution.
     pub fn run(self) -> Result<String> {
         match self.command {
-            Commands::Init { name } => commands::init::run(name),
+            Commands::Init { name } => commands::init::run(name.as_ref()),
             Commands::Build { dir } => commands::build::run(dir),
             Commands::Serve { port } => commands::serve::run(port),
         }

@@ -6,9 +6,8 @@ use std::{env, fs, path::PathBuf};
 ///
 /// If no project name is provided, uses the current directory name.
 /// Asks for user confirmation before creating the project.
-pub fn run(name: Option<String>) -> Result<String> {
-    let name_ref = name.as_ref();
-    let project_path = determine_project_path(name_ref)?;
+pub fn run(name: Option<&String>) -> Result<String> {
+    let project_path = determine_project_path(name)?;
 
     // Extract project name for validation and display
     let project_name = project_path
@@ -21,7 +20,7 @@ pub fn run(name: Option<String>) -> Result<String> {
     validate_project_name(&project_name)?;
 
     // Check if directory exists and is not empty (if we're creating a subdirectory)
-    if name_ref.is_some() {
+    if name.is_some() {
         if project_path.exists() {
             let is_empty = fs::read_dir(&project_path)
                 .map_err(|e| ZahuyachError::Io(e))?
