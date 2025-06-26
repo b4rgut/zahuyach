@@ -61,8 +61,6 @@ jobs:
 
       - name: Setup Rust toolchain
         uses: moonrepo/setup-rust@v1
-        with:
-          cache: none
 
       - name: Install cargo-edit
         run: cargo install cargo-edit
