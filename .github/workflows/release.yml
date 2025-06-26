@@ -8,17 +8,18 @@ jobs:
   tag:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # нужно для создания тегов
     outputs:
       version: ${{ steps.semver.outputs.version-string }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
 
       - id: semver
-        uses: bitshifted/git-automatic-semantic-versioning@v2
+        uses: bitshifted/git-auto-semver@v2
         with:
           create_tag: true
           tag_prefix: "v"
