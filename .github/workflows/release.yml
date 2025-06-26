@@ -1,41 +1,40 @@
-name: Rust CI/CD
-
-on:
-  push:
-    branches: [main]
-
 jobs:
+  # Тэгирование
   tag:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # нужно для создания тегов
+      contents: write
     outputs:
       version: ${{ steps.semver.outputs.version-string }}
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
-
       - id: semver
         uses: bitshifted/git-auto-semver@v2
         with:
           create_tag: true
           tag_prefix: "v"
 
+  # Проверка формата и тестов
   check:
     needs: tag
     runs-on: ubuntu-latest
     if: needs.tag.outputs.version != ''
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-rust@v1
+
+      # Установка Rust + кеш
+      - name: Setup Rust toolchain
+        uses: moonrepo/setup-rust@v1
         with:
-          rust-version: stable
+          components: rustfmt
+
       - run: cargo fmt --all -- --check
       - run: cargo test --release
 
+  # Публикация
   publish:
     needs: [tag, check]
     runs-on: ubuntu-latest
@@ -45,9 +44,8 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - uses: actions/setup-rust@v1
-        with:
-          rust-version: stable
+      - name: Setup Rust toolchain
+        uses: moonrepo/setup-rust@v1
       - run: cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
       - run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
       - run: git push origin refs/tags/${{ needs.tag.outputs.version }}
