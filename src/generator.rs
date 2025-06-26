@@ -718,11 +718,48 @@ impl SiteGenerator {
     }
 
     fn create_excerpt(&self, content: &str) -> String {
-        let words: Vec<&str> = content.split_whitespace().collect();
-        if words.len() > 50 {
-            format!("{}...", words[..50].join(" "))
+        use pulldown_cmark::{Parser, html};
+
+        // Разделяем контент на строки
+        let lines: Vec<&str> = content.lines().collect();
+
+        // Ищем маркер <!-- more --> или берем первые несколько абзацев
+        let excerpt_content = if let Some(more_index) =
+            lines.iter().position(|line| line.trim() == "<!-- more -->")
+        {
+            lines[..more_index].join("\n")
         } else {
-            words.join(" ")
-        }
+            // Берем первые 3 непустых абзаца
+            let mut paragraphs = Vec::new();
+            let mut current_paragraph = Vec::new();
+
+            for line in lines.iter() {
+                if line.trim().is_empty() {
+                    if !current_paragraph.is_empty() {
+                        paragraphs.push(current_paragraph.join("\n"));
+                        current_paragraph.clear();
+                    }
+                } else {
+                    current_paragraph.push(*line);
+                }
+
+                if paragraphs.len() >= 3 {
+                    break;
+                }
+            }
+
+            if !current_paragraph.is_empty() && paragraphs.len() < 3 {
+                paragraphs.push(current_paragraph.join("\n"));
+            }
+
+            paragraphs.join("\n\n")
+        };
+
+        // Конвертируем Markdown в HTML
+        let parser = Parser::new(&excerpt_content);
+        let mut html_output = String::new();
+        html::push_html(&mut html_output, parser);
+
+        html_output
     }
 }
