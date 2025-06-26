@@ -2,32 +2,31 @@ name: Rust CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   tag:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.semver.outputs.version-string }}
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Calculate semantic version
-        id: semver
+      - id: semver
         uses: bitshifted/git-automatic-semantic-versioning@v2
         with:
           create_tag: true
           tag_prefix: "v"
 
   check:
-    name: Format & Test
-    runs-on: ubuntu-latest
     needs: tag
+    runs-on: ubuntu-latest
+    if: needs.tag.outputs.version != ''
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-rust@v1
@@ -37,14 +36,17 @@ jobs:
       - run: cargo test --release
 
   publish:
-    name: Publish crate
-    runs-on: ubuntu-latest
     needs: [tag, check]
-    if: steps.semver.outputs.version-string != ''
+    runs-on: ubuntu-latest
+    if: needs.tag.outputs.version != ''
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - uses: actions/setup-rust@v1
         with:
           rust-version: stable
       - run: cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
       - run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - run: git push origin refs/tags/${{ needs.tag.outputs.version }}
