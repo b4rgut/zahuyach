@@ -1,0 +1,103 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - none
+      force_publish:
+        description: 'Force publish even if version exists'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Install cargo-edit
+        run: cargo install cargo-edit
+
+      - name: Format code
+        run: |
+          cargo fmt
+          if [[ -n $(git status -s) ]]; then
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git add .
+            git commit -m "chore: format code"
+          fi
+
+      - name: Run tests
+        run: cargo test
+
+      - name: Get current version
+        id: current
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Bump version
+        if: inputs.version_bump != 'none'
+        run: |
+          cargo set-version --bump ${{ inputs.version_bump }}
+          NEW_VERSION=$(grep '^version' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Set version for tagging
+        if: inputs.version_bump == 'none'
+        run: |
+          NEW_VERSION=${{ steps.current.outputs.version }}
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Commit and push
+        if: inputs.version_bump != 'none'
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add Cargo.toml Cargo.lock
+          git commit -m "chore: release v${{ env.NEW_VERSION }}"
+          git push
+
+      - name: Create tag
+        run: |
+          # Delete tag if it exists and we're forcing
+          if [[ "${{ inputs.force_publish }}" == "true" ]]; then
+            git tag -d "v${{ env.NEW_VERSION }}" 2>/dev/null || true
+            git push origin :refs/tags/"v${{ env.NEW_VERSION }}" 2>/dev/null || true
+          fi
+
+          git tag -a "v${{ env.NEW_VERSION }}" -m "Release v${{ env.NEW_VERSION }}"
+          git push origin "v${{ env.NEW_VERSION }}"
+
+      - name: Publish to crates.io
+        run: |
+          if [[ "${{ inputs.force_publish }}" == "true" ]]; then
+            cargo publish --allow-dirty || true
+          else
+            cargo publish
+          fi
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
