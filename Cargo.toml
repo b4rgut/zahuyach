@@ -1,6 +1,6 @@
 [package]
 name = "zahuyach"
-version = "0.1.0"
+version = "0.5.6"
 edition = "2024"
 description = "Static site generator for blogs written in Rust"
 license = "MIT"

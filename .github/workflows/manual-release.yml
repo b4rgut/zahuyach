@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version_bump:
-        description: 'Version bump type'
+        description: "Version bump type"
         required: true
-        default: 'patch'
+        default: "patch"
         type: choice
         options:
           - patch
@@ -14,7 +14,7 @@ on:
           - major
           - none
       force_publish:
-        description: 'Force publish even if version exists'
+        description: "Force publish even if version exists"
         required: false
         default: false
         type: boolean
@@ -40,12 +40,15 @@ jobs:
       - name: Install cargo-edit
         run: cargo install cargo-edit
 
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Format code
         run: |
           cargo fmt
           if [[ -n $(git status -s) ]]; then
-            git config user.name github-actions
-            git config user.email github-actions@github.com
             git add .
             git commit -m "chore: format code"
           fi
@@ -75,8 +78,6 @@ jobs:
       - name: Commit and push
         if: inputs.version_bump != 'none'
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
           git add Cargo.toml Cargo.lock
           git commit -m "chore: release v${{ env.NEW_VERSION }}"
           git push

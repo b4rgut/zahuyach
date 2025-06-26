@@ -26,12 +26,15 @@ jobs:
       - name: Install cargo-edit
         run: cargo install cargo-edit
 
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Format code
         run: |
           cargo fmt
           if [[ -n $(git status -s) ]]; then
-            git config user.name github-actions
-            git config user.email github-actions@github.com
             git add .
             git commit -m "chore: format code"
           fi
