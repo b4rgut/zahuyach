@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
-use walkdir::WalkDir; // Добавлен импорт для метода year()
+use walkdir::WalkDir;
 
 pub struct SiteGenerator {
     config: Config,
@@ -33,19 +33,15 @@ impl SiteGenerator {
     pub fn build(&mut self) -> Result<()> {
         println!("🚀 Starting site generation...");
 
-        // 1. Очистка выходной директории
         self.clean_output_dir()?;
         println!("✅ Output directory cleaned");
 
-        // 2. Загрузка постов
         self.load_posts()?;
         println!("✅ Loaded {} posts", self.posts.len());
 
-        // 3. Загрузка шаблонов
         self.load_templates()?;
         println!("✅ Templates loaded");
 
-        // 4. Генерация HTML страниц
         self.generate_posts()?;
         println!("✅ Individual posts generated");
 
@@ -73,11 +69,9 @@ impl SiteGenerator {
             println!("✅ RSS feed generated");
         }
 
-        // 9. Генерация страницы 404
         self.generate_404_page()?;
         println!("✅ 404 page generated");
 
-        // 10. Копирование статических файлов
         self.copy_static_files()?;
         println!("✅ Static files copied");
 
@@ -168,7 +162,6 @@ impl SiteGenerator {
         Ok(())
     }
 
-    // Метод для проверки наличия шаблона
     fn has_template(&self, name: &str) -> bool {
         self.handlebars.get_template(name).is_some()
     }
@@ -176,13 +169,11 @@ impl SiteGenerator {
     fn generate_posts(&self) -> Result<()> {
         let output_dir = Path::new(&self.config.build.output_dir);
 
-        // Проверяем наличие шаблона post
         if !self.has_template("post") {
             println!("⚠️  Template 'post' not found, skipping individual post generation");
             return Ok(());
         }
 
-        // Создаем директорию posts если она не существует
         let posts_dir = output_dir.join("posts");
         fs::create_dir_all(&posts_dir)?;
 
@@ -202,7 +193,6 @@ impl SiteGenerator {
     fn generate_index(&self) -> Result<()> {
         let output_dir = Path::new(&self.config.build.output_dir);
 
-        // Исправлено: передаем ссылки на посты
         let posts_refs: Vec<&Post> = self.posts.iter().collect();
 
         let context = json!({
@@ -213,7 +203,7 @@ impl SiteGenerator {
             "recent_posts": self.get_recent_posts(self.config.get_recent_posts_limit()),
             "stats": self.get_site_stats(),
             "page": {
-                "title": "Главная",
+                "title": "Home",
                 "description": self.config.site.description,
                 "url": "/"
             }
@@ -298,8 +288,8 @@ impl SiteGenerator {
             "popular_tags": self.get_popular_tags(),
             "recent_posts": self.get_recent_posts(self.config.get_recent_posts_limit()),
             "page": {
-                "title": "Архив",
-                "description": "Архив всех статей блога",
+                "title": "Archive",
+                "description": "Archive of all blog posts",
                 "url": "/archive"
             }
         });
@@ -352,8 +342,8 @@ impl SiteGenerator {
                 }).collect::<Vec<_>>(),
                 "categories": self.get_categories_tree(),
                 "page": {
-                    "title": "Теги",
-                    "description": "Все теги блога",
+                    "title": "Tags",
+                    "description": "Archive of all blog posts",
                     "url": "/tags"
                 }
             });
@@ -433,8 +423,8 @@ impl SiteGenerator {
                 "categories": self.get_categories_tree(),
                 "popular_tags": self.get_popular_tags(),
                 "page": {
-                    "title": format!("Категория: {}", category),
-                    "description": format!("Все статьи в категории {}", category),
+                    "title": format!("Category: {}", category),
+                    "description": format!("All articles in category {}", category),
                     "url": format!("/categories/{}", category_slug)
                 }
             });
@@ -459,7 +449,7 @@ impl SiteGenerator {
     fn generate_rss_feed(&self) -> Result<()> {
         let output_dir = Path::new(&self.config.build.output_dir);
 
-        // Проверяем наличие шаблона rss
+        // Check rss template
         if !self.has_template("rss") {
             println!("⚠️  Template 'rss' not found, generating simple RSS feed");
 
@@ -542,7 +532,7 @@ impl SiteGenerator {
     fn generate_about_page(&self) -> Result<()> {
         let output_dir = Path::new(&self.config.build.output_dir);
 
-        // Проверяем наличие шаблона about
+        // Check about template
         if !self.has_template("about") {
             println!("⚠️  Template 'about' not found, skipping about page generation");
             return Ok(());
@@ -572,7 +562,7 @@ impl SiteGenerator {
     fn generate_404_page(&self) -> Result<()> {
         let output_dir = Path::new(&self.config.build.output_dir);
 
-        // Проверяем наличие шаблона 404
+        // Check 404 template
         if !self.has_template("404") {
             println!("⚠️  Template '404' not found, skipping 404 page generation");
             return Ok(());
@@ -697,7 +687,6 @@ impl SiteGenerator {
         })
     }
 
-    // Исправлено: изменена сигнатура функции
     fn get_posts_list_context(&self, posts: Vec<&Post>, limit: usize) -> Vec<Value> {
         let posts_to_show = if limit > 0 && posts.len() > limit {
             &posts[..limit]

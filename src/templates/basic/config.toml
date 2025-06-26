@@ -9,6 +9,7 @@ description = "Технический блог о программировани
 author = "Иван Иванов"                              # Site author
 base_url = "https://example.com"                    # Base site URL (without trailing slash)
 
+
 # Optional settings
 language = "ru"            # Site language (default: "ru")
 timezone = "Europe/Moscow" # Timezone (default: "UTC")
@@ -72,9 +73,9 @@ filename = "feed.xml" # RSS feed filename
 
 # ===== PAGINATION SETTINGS =====
 [pagination]
-posts_per_page = 10     # Posts per page
-pages_in_nav = 5        # Number of pages in navigation
-infinite_scroll = false # Infinite scroll
+posts_per_page = 10    # Posts per page
+pages_in_nav = 5       # Number of pages in navigation
+infinite_scroll = true # Infinite scroll
 
 # ===== FEATURES SETTINGS =====
 [features]
