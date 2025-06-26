@@ -1,270 +1,141 @@
-# Zahuyach Blog Generator Configuration
-# Конфигурационный файл для генератора блога
+# Complete Zahuyach configuration example
+# All settings are optional except the main ones in [site] and [build] sections
 
+# ===== SITE SETTINGS =====
 [site]
-# Основные настройки сайта
-title = "Мой Блог"
-description = "Персональный блог о технологиях, программировании и жизни"
-author = "Автор Блога"
-email = "author@example.com"
-base_url = "https://example.com"
-language = "ru"
-timezone = "Europe/Moscow"
+# Required settings
+title = "Мой блог"                                  # Site title
+description = "Технический блог о программировании" # Site description
+author = "Иван Иванов"                              # Site author
+base_url = "https://example.com"                    # Base site URL (without trailing slash)
 
-# Логотип и фавикон
-logo = "/static/logo.png"
-favicon = "/static/favicon.ico"
+# Optional settings
+language = "ru"            # Site language (default: "ru")
+timezone = "Europe/Moscow" # Timezone (default: "UTC")
+email = "ivan@example.com" # Author's email
 
-# Социальные сети
+# Social networks (all optional)
 [site.social]
 github = "https://github.com/username"
 twitter = "https://twitter.com/username"
 linkedin = "https://linkedin.com/in/username"
-telegram = "https://t.me/username"
-email = "author@example.com"
+email = "ivan@example.com"                     # Can be different from main email
+mastodon = "https://mastodon.social/@username"
+youtube = "https://youtube.com/@username"
+instagram = "https://instagram.com/username"
+facebook = "https://facebook.com/username"
 
-# Настройки сборки
+# ===== BUILD SETTINGS =====
 [build]
-# Выходная директория
-output_dir = "dist"
-# Директория с контентом
-content_dir = "content"
-# Директория со статическими файлами
-static_dir = "static"
-# Директория с шаблонами
-templates_dir = "templates"
+# Required settings
+output_dir = "dist"         # Output directory for built site
+content_dir = "content"     # Posts directory
+static_dir = "static"       # Static files directory
+templates_dir = "templates" # Templates directory
 
-# Очистка выходной директории перед сборкой
-clean_output = true
-# Минификация HTML
-minify_html = true
-# Минификация CSS
-minify_css = true
-# Минификация JS
-minify_js = true
+# Optional settings
+clean_output = true     # Clean output directory before build (default: true)
+generate_rss = true     # Generate RSS feed (default: true)
+rss_limit = 20          # Number of posts in RSS (default: 20)
+generate_sitemap = true # Generate sitemap.xml (default: true)
+clean_urls = true       # Use clean URLs (/post instead of /post.html)
+include_drafts = false  # Include drafts in build (default: false)
 
-# Настройки Markdown
+# ===== MARKDOWN SETTINGS =====
 [markdown]
-# Расширения CommonMark
-enable_tables = true
-enable_footnotes = true
-enable_strikethrough = true
-enable_tasklists = true
-enable_smart_punctuation = true
-enable_heading_attributes = true
+enable_tables = true             # Table support
+enable_footnotes = true          # Footnote support
+enable_strikethrough = true      # Strikethrough support ~~text~~
+enable_tasklists = true          # Task list support - [ ] / - [x]
+enable_smart_punctuation = true  # Smart punctuation (-- → —, ... → …)
+enable_heading_attributes = true # Heading attributes {#id .class}
+syntax_highlighting = true       # Syntax highlighting
+syntax_theme = "github-dark"     # Highlighting theme (github-dark, github-light)
 
-# Подсветка синтаксиса
-syntax_highlighting = true
-syntax_theme = "github-dark"
-
-# Математические формулы
-enable_math = true
-math_engine = "katex"
-
-# Настройки изображений
-[images]
-# Автоматическое изменение размера
-auto_resize = true
-# Максимальная ширина
-max_width = 1200
-# Качество JPEG
-jpeg_quality = 85
-# Генерация WebP
-generate_webp = true
-# Ленивая загрузка
-lazy_loading = true
-
-# Настройки RSS
-[rss]
-# Включить RSS
-enabled = true
-# Количество постов в RSS
-limit = 20
-# Полное содержимое или только excerpt
-full_content = false
-# Имя файла RSS
-filename = "feed.xml"
-
-# Настройки пагинации
-[pagination]
-# Количество постов на странице
-posts_per_page = 10
-# Количество страниц в навигации
-pages_in_nav = 5
-# Бесконечная прокрутка
-infinite_scroll = true
-
-# Настройки поиска
-[search]
-# Включить поиск
-enabled = true
-# Поиск по содержимому
-search_content = true
-# Поиск по заголовкам
-search_titles = true
-# Поиск по тегам
-search_tags = true
-# Минимальная длина запроса
-min_query_length = 2
-# Максимальное количество результатов
-max_results = 50
-
-# Настройки SEO
-[seo]
-# Генерация sitemap.xml
-generate_sitemap = true
-# Robots.txt
-generate_robots = true
-# Open Graph метатеги
-enable_opengraph = true
-# Twitter Card метатеги
-enable_twitter_cards = true
-# JSON-LD структурированные данные
-enable_json_ld = true
-
-# Настройки комментариев
-[comments]
-# Система комментариев (none, disqus, giscus)
-system = "none"
-# Настройки Disqus
-disqus_shortname = ""
-# Настройки Giscus
-giscus_repo = ""
-giscus_repo_id = ""
-giscus_category = ""
-giscus_category_id = ""
-
-# Настройки аналитики
-[analytics]
-# Google Analytics
-google_analytics = ""
-# Яндекс Метрика
-yandex_metrika = ""
-# Plausible Analytics
-plausible_domain = ""
-
-# Настройки темы
-[theme]
-# Название темы
-name = "GitHub Dark"
-# Цветовая схема
-color_scheme = "dark"
-# Шрифты
-font_family = "system"
-# Показать дату чтения
-show_reading_time = true
-# Показать количество слов
-show_word_count = true
-# Показать теги
-show_tags = true
-# Показать категории
-show_categories = true
-# Показать автора
-show_author = true
-
-# Настройки навигации
-[navigation]
-# Главное меню
-[[navigation.main]]
-name = "Главная"
-url = "/"
-weight = 1
-
-[[navigation.main]]
-name = "Архив"
-url = "/archive/"
-weight = 2
-
-[[navigation.main]]
-name = "Теги"
-url = "/tags/"
-weight = 3
-
-[[navigation.main]]
-name = "О блоге"
-url = "/about/"
-weight = 4
-
-# Подвал
-[[navigation.footer]]
-name = "RSS"
-url = "/feed.xml"
-weight = 1
-
-[[navigation.footer]]
-name = "Sitemap"
-url = "/sitemap.xml"
-weight = 2
-
-# Настройки контента
+# ===== CONTENT SETTINGS =====
 [content]
-# Автоматическое извлечение excerpt
-auto_excerpt = true
-# Длина excerpt в словах
-excerpt_length = 50
-# Разделитель excerpt
-excerpt_separator = "<!-- more -->"
+enable_smart_quotes = true          # Smart quotes
+enable_emoji = true                 # Emoji support :smile:
+external_links_new_tab = true       # Open external links in new tab
+add_anchor_links = true             # Add anchor links to headings
+auto_excerpt = true                 # Automatic post excerpt creation
+excerpt_length = 3                  # Number of paragraphs in excerpt (if no separator)
+excerpt_separator = "<!-- more -->" # Excerpt separator
+reading_speed = 200                 # Reading speed (words per minute)
 
-# Настройки дат
-date_format = "%d %B %Y"
-time_format = "%H:%M"
-datetime_format = "%d %B %Y в %H:%M"
+# ===== RSS SETTINGS =====
+[rss]
+enabled = true        # Enable RSS generation
+limit = 20            # Number of posts in feed
+full_content = true   # Include full post content
+filename = "feed.xml" # RSS feed filename
 
-# Настройки тегов и категорий
+# ===== PAGINATION SETTINGS =====
+[pagination]
+posts_per_page = 10     # Posts per page
+pages_in_nav = 5        # Number of pages in navigation
+infinite_scroll = false # Infinite scroll
+
+# ===== FEATURES SETTINGS =====
+[features]
+dark_mode = true           # Dark theme support
+light_mode = true          # Light theme support
+auto_theme = true          # Automatic theme selection
+responsive = true          # Responsive design
+seo_optimized = true       # SEO optimization
+rss_feed = true            # RSS feed
+syntax_highlighting = true # Code highlighting
+reading_time = true        # Reading time
+social_links = true        # Social links
+code_copy = true           # Code copy button
+back_to_top = true         # Back to top button
+reading_progress = true    # Reading progress
+
+# ===== DATE FORMATS =====
+[date_format]
+posts = "%d %B %Y"        # Date format in posts (January 15, 2024)
+archive = "%d %b"         # Date format in archive (Jan 15)
+full = "%d %B %Y в %H:%M" # Full date and time format
+
+# ===== TAXONOMY SETTINGS =====
 [taxonomy]
-# Включить теги
-enable_tags = true
-# Включить категории
-enable_categories = true
-# Минимальное количество постов для отображения тега
-min_tag_count = 1
-# Максимальное количество тегов в облаке
-max_tags_in_cloud = 50
+enable_tags = true       # Enable tags
+enable_categories = true # Enable categories
+min_tag_count = 1        # Minimum tag usage count
+max_tags_in_cloud = 50   # Maximum tags in cloud
 
-# Настройки производительности
-[performance]
-# Кэширование
-enable_cache = true
-# Время жизни кэша в секундах
-cache_ttl = 3600
-# Сжатие статических файлов
-compress_static = true
-# Preload критических ресурсов
-preload_critical = true
+# ===== DISPLAY SETTINGS =====
+[display]
+popular_tags_limit = 20 # Number of popular tags
+recent_posts_limit = 5  # Number of recent posts
+related_posts_limit = 3 # Number of related posts
 
-# Настройки разработки
-[development]
-# Порт для локального сервера
-port = 3000
-# Автоматическая перезагрузка
-auto_reload = true
-# Режим отладки
-debug = false
-# Показать черновики
-show_drafts = false
+# ===== MINIMAL CONFIGURATION EXAMPLE =====
+# Below is the minimum required set of settings:
+#
+# [site]
+# title = "My Blog"
+# description = "Blog description"
+# author = "Author"
+# base_url = "https://example.com"
+#
+# [build]
+# output_dir = "dist"
+# content_dir = "content"
+# static_dir = "static"
+# templates_dir = "templates"
 
-# Настройки безопасности
-[security]
-# Content Security Policy
-enable_csp = true
-# X-Frame-Options
-enable_frame_options = true
-# X-Content-Type-Options
-enable_content_type_options = true
-# Referrer Policy
-referrer_policy = "strict-origin-when-cross-origin"
-
-# Пользовательские настройки
-[custom]
-# Показать кнопку "Наверх"
-show_scroll_to_top = true
-# Показать прогресс чтения
-show_reading_progress = true
-# Темная тема по умолчанию
-default_dark_theme = true
-# Переключатель темы
-theme_switcher = false
-# Кнопка печати
-show_print_button = true
-# Кнопка "Поделиться"
-show_share_buttons = true
+# Date format reference:
+# %Y - year (2024)
+# %y - year short (24)
+# %B - month full (January)
+# %b - month short (Jan)
+# %m - month as number (01)
+# %d - day (15)
+# %H - hour 24h (13)
+# %I - hour 12h (01)
+# %M - minutes (45)
+# %S - seconds (30)
+# %p - AM/PM
+# %a - weekday short (Mon)
+# %A - weekday full (Monday)

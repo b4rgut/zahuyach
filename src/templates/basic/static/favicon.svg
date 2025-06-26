@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        .favicon-bg { fill: #0d1117; }
+        .favicon-fg { fill: #58a6ff; }
+      }
+      @media (prefers-color-scheme: light) {
+        .favicon-bg { fill: #ffffff; }
+        .favicon-fg { fill: #0969da; }
+      }
+    </style>
+  </defs>
+  <rect class="favicon-bg" width="32" height="32" rx="6"/>
+  <path class="favicon-fg" d="M8 12h16v2H10v6h14v2H10v6h14v2H8V12zm4-4h8a2 2 0 0 1 2 2H10a2 2 0 0 1 2-2z"/>
+</svg>

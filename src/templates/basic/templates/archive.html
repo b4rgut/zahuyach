@@ -1,0 +1,196 @@
+{{#> base}} {{#*inline "content"}}
+<div class="archive-page">
+    <header class="page-header">
+        <h1 class="page-title">Archive</h1>
+        <p class="page-description">All posts organized by year</p>
+    </header>
+
+    {{#if posts_by_year}}
+    <div class="archive-content">
+        {{#each posts_by_year}}
+        <section class="archive-year">
+            <h2 class="archive-year-title">{{this.year}}</h2>
+            <ul class="archive-list">
+                {{#each this.posts}}
+                <li class="archive-item">
+                    <time class="archive-date" datetime="{{this.date}}">
+                        {{this.date}}
+                    </time>
+                    <a href="{{this.url}}" class="archive-link">
+                        {{this.title}}
+                    </a>
+                    {{#if this.tags}}
+                    <div class="archive-tags">
+                        {{#each this.tags}}
+                        <span class="archive-tag">#{{this}}</span>
+                        {{/each}}
+                    </div>
+                    {{/if}}
+                </li>
+                {{/each}}
+            </ul>
+        </section>
+        {{/each}}
+    </div>
+    {{else}}
+    <div class="empty-state">
+        <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+        >
+            <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+            ></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <h3>No posts in archive</h3>
+        <p>Posts will appear here once published</p>
+    </div>
+    {{/if}}
+
+    <div class="archive-stats">
+        <p>Total posts: <strong>{{total_posts}}</strong></p>
+    </div>
+</div>
+
+<style>
+    .archive-page {
+        max-width: 768px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-description {
+        font-size: 1.125rem;
+        color: var(--color-fg-muted);
+    }
+
+    .archive-content {
+        margin-bottom: 3rem;
+    }
+
+    .archive-year {
+        margin-bottom: 3rem;
+    }
+
+    .archive-year-title {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--color-border-default);
+    }
+
+    .archive-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .archive-item {
+        display: grid;
+        grid-template-columns: 80px 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--color-border-muted);
+    }
+
+    .archive-item:last-child {
+        border-bottom: none;
+    }
+
+    .archive-date {
+        font-size: 0.875rem;
+        color: var(--color-fg-muted);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .archive-link {
+        font-weight: 500;
+        color: var(--color-fg-default);
+        text-decoration: none;
+    }
+
+    .archive-link:hover {
+        color: var(--color-accent-fg);
+        text-decoration: underline;
+    }
+
+    .archive-tags {
+        grid-column: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+    }
+
+    .archive-tag {
+        font-size: 0.75rem;
+        color: var(--color-fg-muted);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--color-fg-muted);
+    }
+
+    .empty-state svg {
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        color: var(--color-fg-default);
+        margin-bottom: 0.5rem;
+    }
+
+    .archive-stats {
+        text-align: center;
+        padding: 2rem 0;
+        margin-top: 3rem;
+        border-top: 1px solid var(--color-border-default);
+        color: var(--color-fg-muted);
+    }
+
+    .archive-stats strong {
+        color: var(--color-fg-default);
+    }
+
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .archive-item {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .archive-date {
+            margin-bottom: 0.25rem;
+        }
+
+        .archive-tags {
+            grid-column: 1;
+        }
+    }
+</style>
+{{/inline}} {{/base}}

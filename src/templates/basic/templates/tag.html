@@ -1,0 +1,202 @@
+{{#> base}} {{#*inline "content"}}
+<div class="tag-page">
+    <header class="page-header">
+        <h1 class="page-title">
+            <span class="tag-prefix">#</span>{{tag.name}}
+        </h1>
+        <p class="page-description">
+            {{tag.count}} posts tagged with "{{tag.name}}"
+        </p>
+    </header>
+
+    {{#if tag.posts}}
+    <section class="tag-posts">
+        <ul class="post-list">
+            {{#each tag.posts}}
+            <li class="post-item">
+                <article>
+                    <h3 class="post-title">
+                        <a href="{{this.url}}">{{this.title}}</a>
+                    </h3>
+
+                    <div class="post-meta">
+                        <time class="post-date" datetime="{{this.date}}">
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                aria-hidden="true"
+                            >
+                                <rect
+                                    x="3"
+                                    y="4"
+                                    width="18"
+                                    height="18"
+                                    rx="2"
+                                    ry="2"
+                                ></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            {{this.date}}
+                        </time>
+
+                        {{#if this.reading_time}}
+                        <span class="post-reading-time">
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                aria-hidden="true"
+                            >
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            {{this.reading_time}} min read
+                        </span>
+                        {{/if}}
+                    </div>
+
+                    {{#if this.excerpt}}
+                    <p class="post-excerpt">{{{this.excerpt}}}</p>
+                    {{/if}} {{#if this.tags}}
+                    <div class="post-tags">
+                        {{#each this.tags}}
+                        <a href="/tags/{{this}}" class="tag">#{{this}}</a>
+                        {{/each}}
+                    </div>
+                    {{/if}}
+                </article>
+            </li>
+            {{/each}}
+        </ul>
+    </section>
+    {{else}}
+    <div class="empty-state">
+        <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+        >
+            <path
+                d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
+            ></path>
+            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+        </svg>
+        <h3>No posts with this tag</h3>
+        <p>Posts tagged with "{{tag.name}}" will appear here</p>
+    </div>
+    {{/if}}
+
+    <nav class="tag-navigation">
+        <a href="/tags" class="back-link">
+            <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+            >
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            All Tags
+        </a>
+    </nav>
+</div>
+
+<style>
+    .tag-page {
+        max-width: 768px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        display: inline-flex;
+        align-items: baseline;
+    }
+
+    .tag-prefix {
+        color: var(--color-accent-fg);
+        font-weight: 400;
+        margin-right: 0.25rem;
+    }
+
+    .page-description {
+        font-size: 1.125rem;
+        color: var(--color-fg-muted);
+    }
+
+    .tag-posts {
+        margin-bottom: 3rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--color-fg-muted);
+    }
+
+    .empty-state svg {
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        color: var(--color-fg-default);
+        margin-bottom: 0.5rem;
+    }
+
+    .tag-navigation {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--color-border-default);
+        text-align: center;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--color-canvas-subtle);
+        border: 1px solid var(--color-border-default);
+        border-radius: 6px;
+        color: var(--color-fg-default);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .back-link:hover {
+        background-color: var(--color-canvas-inset);
+        border-color: var(--color-border-muted);
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+{{/inline}} {{/base}}
