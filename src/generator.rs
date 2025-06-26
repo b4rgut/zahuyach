@@ -55,16 +55,29 @@ impl SiteGenerator {
         self.generate_archive()?;
         println!("✅ Archive page generated");
 
-        self.generate_tags_pages()?;
-        println!("✅ Tags pages generated");
+        self.generate_about_page()?;
+        println!("✅ About page generated");
 
-        self.generate_categories_pages()?;
-        println!("✅ Categories pages generated");
+        if self.config.is_tags_enabled() {
+            self.generate_tags_pages()?;
+            println!("✅ Tags pages generated");
+        }
 
-        self.generate_rss_feed()?;
-        println!("✅ RSS feed generated");
+        if self.config.is_categories_enabled() {
+            self.generate_categories_pages()?;
+            println!("✅ Categories pages generated");
+        }
 
-        // 5. Копирование статических файлов
+        if self.config.is_rss_enabled() {
+            self.generate_rss_feed()?;
+            println!("✅ RSS feed generated");
+        }
+
+        // 9. Генерация страницы 404
+        self.generate_404_page()?;
+        println!("✅ 404 page generated");
+
+        // 10. Копирование статических файлов
         self.copy_static_files()?;
         println!("✅ Static files copied");
 
@@ -75,7 +88,7 @@ impl SiteGenerator {
     fn clean_output_dir(&self) -> Result<()> {
         let output_path = Path::new(&self.config.build.output_dir);
 
-        if output_path.exists() && self.config.build.clean_output.unwrap_or(true) {
+        if output_path.exists() && self.config.should_clean_output() {
             fs::remove_dir_all(output_path)?;
         }
 
@@ -106,7 +119,7 @@ impl SiteGenerator {
 
             if path.extension().map_or(false, |ext| ext == "md") {
                 let post = Post::from_file(path)?;
-                if !post.is_draft() {
+                if self.config.include_drafts() || !post.is_draft() {
                     self.posts.push(post);
                 }
             }
@@ -169,13 +182,17 @@ impl SiteGenerator {
             return Ok(());
         }
 
+        // Создаем директорию posts если она не существует
+        let posts_dir = output_dir.join("posts");
+        fs::create_dir_all(&posts_dir)?;
+
         for post in &self.posts {
             let post_data = self.create_post_data(post);
             let html = self.handlebars.render("post", &post_data).map_err(|e| {
                 ZahuyachError::InvalidInput(format!("Template render error: {}", e))
             })?;
 
-            let post_path = output_dir.join("posts").join(format!("{}.html", post.slug));
+            let post_path = posts_dir.join(format!("{}.html", post.slug));
             fs::write(post_path, html)?;
         }
 
@@ -190,10 +207,10 @@ impl SiteGenerator {
 
         let context = json!({
             "site": self.get_site_context(),
-            "posts": self.get_posts_list_context(posts_refs, 10),
+            "posts": self.get_posts_list_context(posts_refs, self.config.get_posts_per_page()),
             "popular_tags": self.get_popular_tags(),
             "categories": self.get_categories_tree(),
-            "recent_posts": self.get_recent_posts(5),
+            "recent_posts": self.get_recent_posts(self.config.get_recent_posts_limit()),
             "stats": self.get_site_stats(),
             "page": {
                 "title": "Главная",
@@ -240,12 +257,46 @@ impl SiteGenerator {
             }
         }
 
+        // Convert posts_by_date to a more template-friendly format
+        let mut posts_by_year: Vec<Value> = Vec::new();
+
+        let mut years: Vec<_> = posts_by_date.keys().cloned().collect();
+        years.sort_by(|a, b| b.cmp(a)); // Sort years descending
+
+        for year in years {
+            let months = posts_by_date.get(&year).unwrap();
+            let mut months_list: Vec<_> = months.keys().cloned().collect();
+            months_list.sort_by(|a, b| b.cmp(a)); // Sort months descending
+
+            let mut year_posts: Vec<Value> = Vec::new();
+
+            for month in months_list {
+                let month_posts = months.get(&month).unwrap();
+                for post in month_posts {
+                    year_posts.push(json!({
+                        "title": post.front_matter.title,
+                        "url": format!("/posts/{}", post.slug),
+                        "date": self.format_date_short(&post.front_matter.date),
+                        "date_iso": post.front_matter.date,
+                        "tags": post.front_matter.tags.as_ref().unwrap_or(&vec![])
+                    }));
+                }
+            }
+
+            posts_by_year.push(json!({
+                "year": year,
+                "posts": year_posts
+            }));
+        }
+
         let context = json!({
             "site": self.get_site_context(),
-            "posts_by_date": posts_by_date,
+            "posts_by_year": posts_by_year,
+            "posts_by_date": posts_by_date, // Keep for backward compatibility
             "total_posts": self.posts.len(),
             "categories": self.get_categories_tree(),
             "popular_tags": self.get_popular_tags(),
+            "recent_posts": self.get_recent_posts(self.config.get_recent_posts_limit()),
             "page": {
                 "title": "Архив",
                 "description": "Архив всех статей блога",
@@ -414,12 +465,12 @@ impl SiteGenerator {
 
             // Создаем простой RSS без шаблона
             let rss_content = self.generate_simple_rss()?;
-            fs::write(output_dir.join("feed.xml"), rss_content)?;
+            fs::write(output_dir.join(self.config.get_rss_filename()), rss_content)?;
             return Ok(());
         }
 
         let rss_posts: Vec<Value> = self.posts.iter()
-                .take(20) // Limit to latest 20 posts
+                .take(self.config.get_rss_limit())
                 .map(|post| {
                     json!({
                         "title": post.front_matter.title,
@@ -442,7 +493,7 @@ impl SiteGenerator {
             ZahuyachError::InvalidInput(format!("RSS template render error: {}", e))
         })?;
 
-        fs::write(output_dir.join("feed.xml"), rss_xml)?;
+        fs::write(output_dir.join(self.config.get_rss_filename()), rss_xml)?;
 
         Ok(())
     }
@@ -464,7 +515,7 @@ impl SiteGenerator {
             chrono::Utc::now().format("%a, %d %b %Y %H:%M:%S %z")
         ));
 
-        for post in self.posts.iter().take(20) {
+        for post in self.posts.iter().take(self.config.get_rss_limit()) {
             rss.push_str("\n<item>");
             rss.push_str(&format!("\n<title>{}</title>", post.front_matter.title));
             rss.push_str(&format!(
@@ -486,6 +537,65 @@ impl SiteGenerator {
         rss.push_str("\n</rss>");
 
         Ok(rss)
+    }
+
+    fn generate_about_page(&self) -> Result<()> {
+        let output_dir = Path::new(&self.config.build.output_dir);
+
+        // Проверяем наличие шаблона about
+        if !self.has_template("about") {
+            println!("⚠️  Template 'about' not found, skipping about page generation");
+            return Ok(());
+        }
+
+        let context = json!({
+            "site": self.get_site_context(),
+            "recent_posts": self.get_recent_posts(self.config.get_recent_posts_limit()),
+            "popular_tags": self.get_popular_tags(),
+            "page": {
+                "title": "About",
+                "description": "About this blog",
+                "url": "/about"
+            },
+            "is_about": true
+        });
+
+        let html = self.handlebars.render("about", &context).map_err(|e| {
+            ZahuyachError::InvalidInput(format!("About template render error: {}", e))
+        })?;
+
+        fs::write(output_dir.join("about.html"), html)?;
+
+        Ok(())
+    }
+
+    fn generate_404_page(&self) -> Result<()> {
+        let output_dir = Path::new(&self.config.build.output_dir);
+
+        // Проверяем наличие шаблона 404
+        if !self.has_template("404") {
+            println!("⚠️  Template '404' not found, skipping 404 page generation");
+            return Ok(());
+        }
+
+        let context = json!({
+            "site": self.get_site_context(),
+            "recent_posts": self.get_recent_posts(self.config.get_recent_posts_limit()),
+            "popular_tags": self.get_popular_tags(),
+            "page": {
+                "title": "404 - Page Not Found",
+                "description": "The page you're looking for doesn't exist",
+                "url": "/404.html"
+            }
+        });
+
+        let html = self.handlebars.render("404", &context).map_err(|e| {
+            ZahuyachError::InvalidInput(format!("404 template render error: {}", e))
+        })?;
+
+        fs::write(output_dir.join("404.html"), html)?;
+
+        Ok(())
     }
 
     fn copy_static_files(&self) -> Result<()> {
@@ -531,8 +641,11 @@ impl SiteGenerator {
             "post": {
                 "title": post.front_matter.title,
                 "content": post.html_content,
-                "date": post.front_matter.date,
+                "date": self.format_date(&post.front_matter.date),
+                "date_raw": post.front_matter.date,
                 "date_formatted": self.format_date(&post.front_matter.date),
+                "date_short": self.format_date_short(&post.front_matter.date),
+                "date_iso": post.front_matter.date,
                 "author": post.front_matter.author.as_ref().unwrap_or(&self.config.site.author),
                 "tags": post.front_matter.tags.as_ref().unwrap_or(&vec![]),
                 "categories": post.front_matter.categories.as_ref().unwrap_or(&vec![]),
@@ -543,7 +656,7 @@ impl SiteGenerator {
             },
             "categories": self.get_categories_tree(),
             "popular_tags": self.get_popular_tags(),
-            "recent_posts": self.get_recent_posts(5),
+            "recent_posts": self.get_recent_posts(self.config.get_recent_posts_limit()),
             "page": {
                 "title": post.front_matter.title,
                 "description": post.front_matter.description.as_ref().unwrap_or(&post.front_matter.title),
@@ -559,7 +672,28 @@ impl SiteGenerator {
             "author": self.config.site.author,
             "base_url": self.config.site.base_url,
             "language": self.config.site.language.as_ref().unwrap_or(&"ru".to_string()),
-            "current_year": chrono::Utc::now().year() // Исправлено: добавлен импорт Datelike
+            "current_year": chrono::Utc::now().year(),
+            "email": self.config.site.email.as_ref().unwrap_or(&String::new()),
+            "timezone": self.config.site.timezone.as_ref().unwrap_or(&"UTC".to_string()),
+            "social": self.config.site.social.as_ref().map(|s| json!({
+                "github": s.github.as_ref().unwrap_or(&String::new()),
+                "twitter": s.twitter.as_ref().unwrap_or(&String::new()),
+                "linkedin": s.linkedin.as_ref().unwrap_or(&String::new()),
+                "email": s.email.as_ref().or(self.config.site.email.as_ref()).unwrap_or(&String::new()),
+                "mastodon": s.mastodon.as_ref().unwrap_or(&String::new()),
+                "youtube": s.youtube.as_ref().unwrap_or(&String::new()),
+                "instagram": s.instagram.as_ref().unwrap_or(&String::new()),
+                "facebook": s.facebook.as_ref().unwrap_or(&String::new())
+            })).unwrap_or_else(|| json!({
+                "github": "",
+                "twitter": "",
+                "linkedin": "",
+                "email": self.config.site.email.as_ref().unwrap_or(&String::new()),
+                "mastodon": "",
+                "youtube": "",
+                "instagram": "",
+                "facebook": ""
+            }))
         })
     }
 
@@ -575,8 +709,11 @@ impl SiteGenerator {
             json!({
                 "title": post.front_matter.title,
                 "slug": post.slug,
-                "date": post.front_matter.date,
+                "url": format!("/posts/{}", post.slug),
+                "date": self.format_date(&post.front_matter.date),
+                "date_raw": post.front_matter.date,
                 "date_formatted": self.format_date(&post.front_matter.date),
+                "date_short": self.format_date_short(&post.front_matter.date),
                 "date_iso": post.front_matter.date,
                 "author": post.front_matter.author.as_ref().unwrap_or(&self.config.site.author),
                 "tags": post.front_matter.tags.as_ref().unwrap_or(&vec![]),
@@ -605,7 +742,8 @@ impl SiteGenerator {
         tags.sort_by(|a, b| b.1.cmp(&a.1)); // Sort by count descending
 
         tags.into_iter()
-            .take(20) // Limit to top 20 tags
+            .filter(|(_, count)| *count >= self.config.get_min_tag_count())
+            .take(self.config.get_max_tags_in_cloud())
             .map(|(name, count)| {
                 json!({
                     "name": name,
@@ -650,6 +788,8 @@ impl SiteGenerator {
                 json!({
                     "title": post.front_matter.title,
                     "slug": post.slug,
+                    "url": format!("/posts/{}", post.slug),
+                    "date": self.format_date(&post.front_matter.date),
                     "date_short": self.format_date_short(&post.front_matter.date),
                     "date_iso": post.front_matter.date,
                     "reading_time": self.calculate_reading_time(&post.content)
@@ -699,22 +839,63 @@ impl SiteGenerator {
     }
 
     fn format_date(&self, date: &str) -> String {
-        // Simple date formatting, can be enhanced
-        date.to_string()
+        use chrono::{DateTime, NaiveDateTime};
+
+        // Parse the date string
+        let parsed = if let Ok(dt) = DateTime::parse_from_rfc3339(date) {
+            dt.naive_local()
+        } else if let Ok(dt) = NaiveDateTime::parse_from_str(date, "%Y-%m-%d %H:%M:%S") {
+            dt
+        } else if let Ok(dt) = NaiveDateTime::parse_from_str(date, "%Y-%m-%d") {
+            dt
+        } else {
+            // If parsing fails, return original string
+            return date.to_string();
+        };
+
+        // Get format from config or use default
+        let format = self
+            .config
+            .date_format
+            .as_ref()
+            .and_then(|df| df.posts.as_deref())
+            .unwrap_or("%B %d, %Y");
+
+        parsed.format(format).to_string()
     }
 
     fn format_date_short(&self, date: &str) -> String {
-        // Short date format
-        if let Some(date_part) = date.split('T').next() {
-            date_part.to_string()
+        use chrono::{DateTime, NaiveDateTime};
+
+        // Parse the date string
+        let parsed = if let Ok(dt) = DateTime::parse_from_rfc3339(date) {
+            dt.naive_local()
+        } else if let Ok(dt) = NaiveDateTime::parse_from_str(date, "%Y-%m-%d %H:%M:%S") {
+            dt
+        } else if let Ok(dt) = NaiveDateTime::parse_from_str(date, "%Y-%m-%d") {
+            dt
         } else {
-            date.to_string()
-        }
+            // If parsing fails, try simple split
+            if let Some(date_part) = date.split('T').next() {
+                return date_part.to_string();
+            }
+            return date.to_string();
+        };
+
+        // Get format from config or use default
+        let format = self
+            .config
+            .date_format
+            .as_ref()
+            .and_then(|df| df.archive.as_deref())
+            .unwrap_or("%b %d");
+
+        parsed.format(format).to_string()
     }
 
     fn calculate_reading_time(&self, content: &str) -> usize {
         let words = content.split_whitespace().count();
-        (words / 200).max(1) // Assume 200 words per minute
+        (words / self.config.get_reading_speed()).max(1)
     }
 
     fn create_excerpt(&self, content: &str) -> String {
@@ -723,13 +904,15 @@ impl SiteGenerator {
         // Разделяем контент на строки
         let lines: Vec<&str> = content.lines().collect();
 
-        // Ищем маркер <!-- more --> или берем первые несколько абзацев
-        let excerpt_content = if let Some(more_index) =
-            lines.iter().position(|line| line.trim() == "<!-- more -->")
+        // Ищем маркер excerpt или берем первые несколько абзацев
+        let excerpt_separator = self.config.get_excerpt_separator();
+        let excerpt_content = if let Some(more_index) = lines
+            .iter()
+            .position(|line| line.trim() == excerpt_separator)
         {
             lines[..more_index].join("\n")
         } else {
-            // Берем первые 3 непустых абзаца
+            // Берем первые N непустых абзаца
             let mut paragraphs = Vec::new();
             let mut current_paragraph = Vec::new();
 
@@ -743,12 +926,13 @@ impl SiteGenerator {
                     current_paragraph.push(*line);
                 }
 
-                if paragraphs.len() >= 3 {
+                if paragraphs.len() >= self.config.get_excerpt_length() {
                     break;
                 }
             }
 
-            if !current_paragraph.is_empty() && paragraphs.len() < 3 {
+            if !current_paragraph.is_empty() && paragraphs.len() < self.config.get_excerpt_length()
+            {
                 paragraphs.push(current_paragraph.join("\n"));
             }
 
